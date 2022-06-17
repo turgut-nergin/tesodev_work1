@@ -48,9 +48,14 @@ func (h *Handler) UpsertUser(c echo.Context) error {
 		return errors.ValidationError.WrapErrorCode(1003).WrapDesc(err.Error()).ToResponse(c)
 	}
 
+	hashedPass, err := lib.HashPassword(userReq.Password)
+
+	if err != nil {
+		return errors.UnknownError.WrapErrorCode(1003).WrapDesc(err.Error()).ToResponse(c)
+	}
 	user := user.User{
 		UserName:  userReq.UserName,
-		Password:  userReq.Password,
+		Password:  hashedPass,
 		Email:     userReq.Email,
 		Type:      userReq.Type,
 		UpdatedAt: lib.TimeStampNow(),

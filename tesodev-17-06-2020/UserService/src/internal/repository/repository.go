@@ -31,7 +31,7 @@ func (r *Repository) Get(id string) (*user.User, error) {
 }
 
 func (r *Repository) Delete(id string) (int64, error) {
-	result, err := r.db.DeleteOne(context.Background(), bson.M{"customerId": id})
+	result, err := r.db.DeleteOne(context.Background(), bson.M{"id": id})
 	return result.DeletedCount, err
 }
 
