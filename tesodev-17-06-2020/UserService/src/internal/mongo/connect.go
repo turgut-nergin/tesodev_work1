@@ -8,7 +8,7 @@ import (
 )
 
 func MongoClient(url string) *mongo.Client {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI(url)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
