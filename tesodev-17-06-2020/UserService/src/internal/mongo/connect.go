@@ -2,6 +2,8 @@ package mongo
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -10,15 +12,11 @@ import (
 func MongoClient(url string) *mongo.Client {
 	clientOptions := options.Client().ApplyURI(url)
 
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		panic(err)
-	}
-
-	err = client.Ping(context.TODO(), nil)
-
-	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return client
 }

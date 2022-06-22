@@ -5,13 +5,18 @@ type Config struct {
 	Port           string
 	DBName         string
 	CollectionName string
+	UserName       string
+	Password       string
 }
 
 var EnvConfig = map[string]Config{
+
 	"local": {
-		Host:           "mongodb://localhost",
+		Host:           "localhost",
 		Port:           "27017",
 		DBName:         "Tickets",
 		CollectionName: "users",
+		UserName:       "negrin",
+		Password:       "Naciye.111",
 	},
 }

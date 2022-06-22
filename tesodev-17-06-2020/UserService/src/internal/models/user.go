@@ -5,7 +5,7 @@ import (
 )
 
 type UserResponse struct {
-	UserId    string    `json:"userId"`
+	UserId    string    `json:"_id"`
 	UserName  string    `json:"userName"`
 	Password  string    `json:"password"`
 	Email     string    `json:"email"`
@@ -15,11 +15,11 @@ type UserResponse struct {
 }
 
 type User struct {
-	UserId    string `bson:"userId,omitempty"`
-	UserName  string `bson:"userName"`
-	Password  string `bson:"password"`
-	Email     string `bson:"email"`
-	Type      string `bson:"type"`
+	UserId    string `bson:"_id,omitempty"`
+	UserName  string `bson:"userName,omitempty"`
+	Password  string `bson:"password,omitempty"`
+	Email     string `bson:"email,omitempty"`
+	Type      string `bson:"type,omitempty"`
 	CreatedAt int64  `bson:",omitempty"`
 	UpdatedAt int64  `bson:",omitempty"`
 }

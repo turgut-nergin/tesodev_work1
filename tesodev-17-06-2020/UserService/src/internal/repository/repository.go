@@ -23,7 +23,7 @@ func New(mongoClient *mongo.Collection) *Repository {
 func (r *Repository) Get(id string) (*models.User, error) {
 	user := models.User{}
 
-	if err := r.db.FindOne(context.Background(), bson.M{"userId": id}).Decode(&user); err != nil {
+	if err := r.db.FindOne(context.Background(), bson.M{"_id": id}).Decode(&user); err != nil {
 		return nil, err
 	}
 
@@ -31,19 +31,19 @@ func (r *Repository) Get(id string) (*models.User, error) {
 }
 
 func (r *Repository) Delete(id string) (int64, error) {
-	result, err := r.db.DeleteOne(context.Background(), bson.M{"userId": id})
+	result, err := r.db.DeleteOne(context.Background(), bson.M{"_id": id})
 	return result.DeletedCount, err
 }
 
 func (r *Repository) Upsert(id string, user *models.User) *models.UpSertResult {
-	filter := bson.M{"userId": id}
+	filter := bson.M{"_id": id}
 	userId := uuid.New().String()
 	createdAt := lib.TimeStampNow()
 
 	update := bson.M{
 		"$setOnInsert": bson.M{
 			"createdAt": createdAt,
-			"userId":    userId,
+			"_id":       userId,
 		},
 		"$set": user}
 

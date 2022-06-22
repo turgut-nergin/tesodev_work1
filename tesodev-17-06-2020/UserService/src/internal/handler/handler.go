@@ -33,10 +33,14 @@ func (h *Handler) GetUser(c echo.Context) error {
 	user, err := h.repository.Get(id)
 	if err != nil {
 		return errors.UnknownError.WrapErrorCode(1000).
+			WrapDesc(fmt.Sprintf(err.Error())).ToResponse(c)
+
+	}
+	if user == nil {
+		return errors.NotFound.WrapErrorCode(11000).
 			WrapDesc(fmt.Sprintf("User id: %v not found", id)).ToResponse(c)
 
 	}
-
 	respUser := lib.ResponseAssign(user)
 
 	return c.JSON(http.StatusOK, respUser)
