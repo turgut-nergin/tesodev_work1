@@ -14,7 +14,7 @@ var EnvConfig = map[string]Config{
 	"local": {
 		Host:           "localhost",
 		Port:           "27017",
-		DBName:         "Tickets",
+		DBName:         "User",
 		CollectionName: "users",
 		UserName:       "negrin",
 		Password:       "Naciye.111",

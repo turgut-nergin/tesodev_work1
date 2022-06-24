@@ -43,7 +43,6 @@ func (r *Repository) Upsert(id string, user *models.User) *models.UpSertResult {
 	update := bson.M{
 		"$setOnInsert": bson.M{
 			"createdAt": createdAt,
-			"_id":       userId,
 		},
 		"$set": user}
 

@@ -53,6 +53,8 @@ func (h *Handler) UpsertUser(c echo.Context) error {
 		if _, err := uuid.Parse(id); err != nil {
 			return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 		}
+	} else {
+		id = uuid.New().String()
 	}
 
 	userReq := models.UserRequest{}
@@ -76,6 +78,7 @@ func (h *Handler) UpsertUser(c echo.Context) error {
 	if err != nil {
 		return errors.UnknownError.WrapErrorCode(1006).WrapDesc(err.Error()).ToResponse(c)
 	}
+
 	user := models.User{
 		UserName:  userReq.UserName,
 		Password:  hashedPass,
