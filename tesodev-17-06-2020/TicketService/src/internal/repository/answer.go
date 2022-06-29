@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
@@ -18,8 +17,8 @@ type AnswerRepository interface {
 	DeleteAnswer(ticketId string) (int64, error)
 }
 
-func NewAnswer(mongoClient *mongo.Database) *Repository {
-	return &Repository{mongoClient.Collection("Answers")}
+func NewAnswer(mongoClient *mongo.Collection) *Repository {
+	return &Repository{mongoClient}
 }
 
 func (r *Repository) GetAnswers(ticketId string) ([]models.Answer, error) {
@@ -50,7 +49,6 @@ func (r *Repository) UpsertAnswer(id string, answer *models.Answer) (*int64, err
 			"createdAt": lib.TimeStampNow(),
 		},
 		"$set": answer}
-	fmt.Println(answer)
 	opts := options.Update().SetUpsert(true)
 	result, err := r.collection.UpdateOne(context, filter, update, opts)
 	if err != nil {

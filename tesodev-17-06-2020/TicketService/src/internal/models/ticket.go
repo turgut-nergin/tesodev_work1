@@ -19,11 +19,12 @@ type TicketResponse struct {
 }
 
 type Ticket struct {
-	Id             string `bson:"_id,omitempty"`
-	Subject        string `bson:"subject,omitempty"`
-	Body           string `bson:"body,omitempty"`
-	CategoryId     string `bson:"categoryId,omitempty"`
-	CreatedBy      string `bson:"createdBy,omitempty"`
+	Id         string `bson:"_id,omitempty"`
+	Subject    string `bson:"subject,omitempty"`
+	Body       string `bson:"body,omitempty"`
+	CategoryId string `bson:"categoryId,omitempty"`
+	CreatedBy  string `bson:"createdBy,omitempty"`
+
 	Status         string `bson:"status,omitempty"`
 	LastAnsweredAt int64  `bson:"lastAnsweredAt,omitempty"`
 	CreatedAt      int64  `bson:"createdAt,omitempty"`

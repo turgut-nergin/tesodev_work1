@@ -11,17 +11,16 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
-	"github.com/turgut-nergin/tesodev_work1/internal/repository/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/routes"
 )
 
-func InitRepository(url string, config config.Config) models.Repositorys {
+func InitRepository(config config.Config) repository.Repositories {
+	url := fmt.Sprintf("mongodb+srv://%s:%s@tesodev.4plwq.mongodb.net/?retryWrites=true&w=majority", config.UserName, config.Password)
 	client := mongo.MongoClient(url)
 	db := client.Database(config.DBName)
-	var modelRepo models.Repositorys
-	modelRepo.TicketR = repository.NewTicket(db)
-	modelRepo.AttachmentR = repository.NewAttachment(db)
-	modelRepo.AnswerR = repository.NewAnswer(db)
+	var modelRepo repository.Repositories
+	modelRepo.TicketRepository = repository.NewTicket(db.Collection(config.TicketCollection))
+	modelRepo.AnswerRepository = repository.NewAnswer(db.Collection(config.AnswerCollection))
 	return modelRepo
 }
 
@@ -31,9 +30,8 @@ func main() {
 	}
 	appEnv := os.Getenv("CURRENT_STATE")
 	config := config.EnvConfig[appEnv]
-	url := fmt.Sprintf("mongodb+srv://%s:%s@cluster2.tw0oy.mongodb.net/?retryWrites=true&w=majority", config.UserName, config.Password)
-	repositorys := InitRepository(url, config)
-	handler := handler.New(repositorys)
+	repositories := InitRepository(config)
+	handler := handler.New(repositories)
 	echo := echo.New()
 	routes.GetRouter(echo, handler)
 	if err := godotenv.Load(".env"); err != nil {

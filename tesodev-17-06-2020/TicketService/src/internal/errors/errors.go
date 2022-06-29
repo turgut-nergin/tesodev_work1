@@ -35,7 +35,7 @@ func (e *Error) WrapErrorCode(errorCode int) *Error {
 }
 
 var (
-	UnknownError    = New("user", "", "unknown error", 500, 0)
-	ValidationError = New("user", "validation", "validation error", 400, 0)
-	NotFound        = New("user", "handler", "not found user", 404, 0)
+	UnknownError    = New("ticket", "", "unknown error", 500, 0)
+	ValidationError = New("ticket", "validation", "validation error", 400, 0)
+	NotFound        = New("ticket", "handler", "not found user", 404, 0)
 )

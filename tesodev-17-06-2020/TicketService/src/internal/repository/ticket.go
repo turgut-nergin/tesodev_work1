@@ -15,12 +15,13 @@ type TicketRepository interface {
 	GetTicket(id string) (*models.Ticket, error)
 }
 
-func NewTicket(mongoClient *mongo.Database) *Repository {
-	return &Repository{mongoClient.Collection("Tickets")}
+func NewTicket(mongoClient *mongo.Collection) *Repository {
+	return &Repository{mongoClient}
 }
 
 func (r *Repository) InsertTicket(ticket *models.Ticket) (*string, error) {
-	context, cancel := context.WithTimeout(context.Background(), time.Second*10)
+
+	context, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
 
 	if _, err := r.collection.InsertOne(context, ticket); err != nil {

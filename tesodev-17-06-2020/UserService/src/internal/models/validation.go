@@ -1,24 +1,38 @@
 package models
 
 import (
-	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
+	"errors"
+	"regexp"
 )
 
 func validateUserName(userName string) error {
-	return validation.Validate(userName, validation.Required, validation.Length(2, 100))
+	if len(userName) < 2 || len(userName) > 40 {
+		return errors.New("The name field must be between 2-40 chars!")
+	}
+	return nil
 }
 
 func validatePassword(password string) error {
-	return validation.Validate(password, validation.Required, validation.Length(2, 50))
+	if len(password) < 2 || len(password) > 40 {
+		return errors.New("The password field must be between 2-40 chars!")
+	}
+	return nil
+
 }
 
 func validateEmail(email string) error {
-	return validation.Validate(email, validation.Required, is.Email)
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	if isEmaailValid := emailRegex.MatchString(email); !isEmaailValid {
+		return errors.New("invalid Email")
+	}
+	return nil
 }
 
 func validateType(userType string) error {
-	return validation.Validate(userType, validation.Required)
+	if len(userType) < 2 || len(userType) > 5 {
+		return errors.New("The password field must be between 2-5 chars!")
+	}
+	return nil
 }
 
 func (user UserRequest) ValidateUpdate() error {

@@ -11,16 +11,16 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
-	repositoryModel "github.com/turgut-nergin/tesodev_work1/internal/repository/models"
+	"github.com/turgut-nergin/tesodev_work1/internal/repository"
 )
 
 type Handler struct {
-	repositoryModel.Repositorys
+	repository.Repositories
 }
 
-func New(repositorys repositoryModel.Repositorys) *Handler {
+func New(repositories repository.Repositories) *Handler {
 	return &Handler{
-		Repositorys: repositorys,
+		Repositories: repositories,
 	}
 }
 func (h *Handler) CreateTicket(c echo.Context) error {
@@ -28,16 +28,21 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 	categoryId := c.QueryParam("categoryId")
 
 	if userid == "" {
-		return errors.ValidationError.WrapErrorCode(1008).WrapDesc("user id cannot be empty").ToResponse(c)
+		return errors.ValidationError.WrapErrorCode(3000).WrapDesc("user id cannot be empty").ToResponse(c)
 	}
 	if _, err := uuid.Parse(userid); err != nil {
-		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
+		return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	ticketRequest := models.TicketRequest{}
 
 	if err := json.NewDecoder(c.Request().Body).Decode(&ticketRequest); err != nil {
-		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
+		return errors.ValidationError.WrapErrorCode(3002).WrapDesc(err.Error()).ToResponse(c)
+	}
+
+	if err := lib.Validate(ticketRequest); err != nil {
+		return errors.ValidationError.WrapErrorCode(2999).WrapDesc(err.Error()).ToResponse(c)
+
 	}
 
 	ticket := models.Ticket{}
@@ -51,15 +56,9 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 	ticket.UpdatedAt = lib.TimeStampNow()
 	ticket.CreatedBy = userid
 
-	ticketId, err := h.TicketR.InsertTicket(&ticket)
+	ticketId, err := h.TicketRepository.InsertTicket(&ticket)
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2001).WrapDesc(err.Error()).ToResponse(c)
-	}
-
-	err = h.AttachmentR.InsertAttachment(*ticketId, ticketRequest.Attachments)
-
-	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2002).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(3003).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	return c.JSON(http.StatusCreated, ticketId)
@@ -69,21 +68,17 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 func (h *Handler) DeleteTicket(c echo.Context) error {
 	ticketId := c.Param("ticketId")
 	if _, err := uuid.Parse(ticketId); err != nil {
-		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
+		return errors.ValidationError.WrapErrorCode(3005).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	deletedCount, err := h.TicketR.DeleteTicket(ticketId)
+	deletedCount, err := h.TicketRepository.DeleteTicket(ticketId)
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2002).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(3006).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	if deletedCount != 0 {
-		if _, err := h.AttachmentR.DeleteAttachment(ticketId); err != nil {
-			return errors.UnknownError.WrapErrorCode(2002).WrapDesc(err.Error()).ToResponse(c)
-		}
-
-		if _, err := h.AnswerR.DeleteAnswer(ticketId); err != nil {
-			return errors.UnknownError.WrapErrorCode(2002).WrapDesc(err.Error()).ToResponse(c)
+		if _, err := h.AnswerRepository.DeleteAnswer(ticketId); err != nil {
+			return errors.UnknownError.WrapErrorCode(3008).WrapDesc(err.Error()).ToResponse(c)
 		}
 		return c.JSON(http.StatusOK, true)
 
@@ -96,13 +91,13 @@ func (h *Handler) GetTicket(c echo.Context) error {
 	ticketId := c.Param("ticketId")
 
 	if _, err := uuid.Parse(ticketId); err != nil {
-		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
+		return errors.ValidationError.WrapErrorCode(3009).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	tickets, err := h.TicketR.GetTicket(ticketId)
+	tickets, err := h.TicketRepository.GetTicket(ticketId)
 
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2005).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(3010).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	if tickets == nil {
@@ -110,21 +105,14 @@ func (h *Handler) GetTicket(c echo.Context) error {
 			WrapDesc(fmt.Sprintf("Ticket id: %v not found", ticketId)).ToResponse(c)
 	}
 
-	answers, err := h.AnswerR.GetAnswers(ticketId)
+	answers, err := h.AnswerRepository.GetAnswers(ticketId)
 
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2004).WrapDesc(err.Error()).ToResponse(c)
-	}
-
-	attachments, err := h.AttachmentR.GetAttachment(ticketId)
-
-	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2002).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(3011).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	ticketsResponse := models.TicketResponse{}
 	ticketsResponse.Answers = answers
-	ticketsResponse.Attachments = attachments
 	ticketsResponse.Body = tickets.Body
 	ticketsResponse.CreatedAt = time.Unix(tickets.CreatedAt, 0)
 	ticketsResponse.UpdatedAt = time.Unix(tickets.UpdatedAt, 0)
@@ -163,9 +151,9 @@ func (h *Handler) UpsertAnswer(c echo.Context) error {
 	answer.UpdatedAt = lib.TimeStampNow()
 	answer.CreatedBy = ticketId
 
-	modifiedCount, err := h.AnswerR.UpsertAnswer(answerId, &answer)
+	modifiedCount, err := h.AnswerRepository.UpsertAnswer(answerId, &answer)
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(2001).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(3013).WrapDesc(err.Error()).ToResponse(c)
 	}
 	if *modifiedCount == 0 {
 		return c.JSON(http.StatusCreated, true)
