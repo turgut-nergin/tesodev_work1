@@ -11,6 +11,7 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"github.com/turgut-nergin/tesodev_work1/internal/routes"
 )
 
 func main() {
@@ -19,18 +20,16 @@ func main() {
 	}
 	appEnv := os.Getenv("CURRENT_STATE")
 	config := config.EnvConfig[appEnv]
-	url := fmt.Sprintf("mongodb+srv://%s:%s@cluster2.tw0oy.mongodb.net/?retryWrites=true&w=majority", config.UserName, config.Password)
+	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
 	client := mongo.MongoClient(url)
 	collection := client.Database(config.DBName).Collection(config.CollectionName)
 	repo := repository.New(collection)
 	handler := handler.New(repo)
-	e := echo.New()
-	e.GET("/user/:userId", handler.GetUser)
-	e.POST("/user", handler.UpsertUser)
-	e.DELETE("/user/:userId", handler.DeleteUser)
+	echo := echo.New()
+	routes.GetRouter(echo, handler)
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error env file")
 	}
-	log.Fatal(e.Start(":8080"))
+	log.Fatal(echo.Start(":8080"))
 
 }

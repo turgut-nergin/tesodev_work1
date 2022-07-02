@@ -15,7 +15,7 @@ import (
 )
 
 func InitRepository(config config.Config) repository.Repositories {
-	url := fmt.Sprintf("mongodb+srv://%s:%s@tesodev.4plwq.mongodb.net/?retryWrites=true&w=majority", config.UserName, config.Password)
+	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
 	client := mongo.MongoClient(url)
 	db := client.Database(config.DBName)
 	var modelRepo repository.Repositories

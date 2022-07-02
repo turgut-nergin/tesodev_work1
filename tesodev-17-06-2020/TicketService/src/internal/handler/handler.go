@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo"
@@ -24,13 +23,13 @@ func New(repositories repository.Repositories) *Handler {
 	}
 }
 func (h *Handler) CreateTicket(c echo.Context) error {
-	userid := c.QueryParam("userId")
+	userId := c.QueryParam("userId")
 	categoryId := c.QueryParam("categoryId")
 
-	if userid == "" {
+	if userId == "" {
 		return errors.ValidationError.WrapErrorCode(3000).WrapDesc("user id cannot be empty").ToResponse(c)
 	}
-	if _, err := uuid.Parse(userid); err != nil {
+	if _, err := uuid.Parse(userId); err != nil {
 		return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
 	}
 
@@ -45,18 +44,8 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 
 	}
 
-	ticket := models.Ticket{}
-	ticket.Id = uuid.New().String()
-	ticket.Subject = ticketRequest.Subject
-	ticket.Status = ticketRequest.Status
-	ticket.Body = ticketRequest.Body
-	ticket.CategoryId = categoryId
-	ticket.CreatedAt = lib.TimeStampNow()
-	ticket.LastAnsweredAt = lib.TimeStampNow()
-	ticket.UpdatedAt = lib.TimeStampNow()
-	ticket.CreatedBy = userid
-
-	ticketId, err := h.TicketRepository.InsertTicket(&ticket)
+	ticket := lib.RequestAssign(userId, categoryId, &ticketRequest)
+	ticketId, err := h.TicketRepository.InsertTicket(ticket)
 	if err != nil {
 		return errors.UnknownError.WrapErrorCode(3003).WrapDesc(err.Error()).ToResponse(c)
 	}
@@ -111,17 +100,7 @@ func (h *Handler) GetTicket(c echo.Context) error {
 		return errors.UnknownError.WrapErrorCode(3011).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	ticketsResponse := models.TicketResponse{}
-	ticketsResponse.Answers = answers
-	ticketsResponse.Body = tickets.Body
-	ticketsResponse.CreatedAt = time.Unix(tickets.CreatedAt, 0)
-	ticketsResponse.UpdatedAt = time.Unix(tickets.UpdatedAt, 0)
-	ticketsResponse.LastAnsweredAt = time.Unix(tickets.LastAnsweredAt, 0)
-	ticketsResponse.Status = tickets.Status
-	ticketsResponse.Subject = tickets.Subject
-	ticketsResponse.Id = tickets.Id
-	ticketsResponse.CreatedBy = tickets.CreatedBy
-
+	ticketsResponse := lib.ResponseAssign(answers, tickets)
 	return c.JSON(http.StatusNotFound, ticketsResponse)
 
 }
