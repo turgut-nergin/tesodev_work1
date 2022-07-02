@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+    
+  mongo-db:
+    image: mongo
+    ports:
+        - "27017:27017"
+    container_name: mongo_container
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      service-network:
+        aliases:
+          - mongo-db
+
+  
+volumes:
+  mongo-data:
+
+networks:
+  service-network:

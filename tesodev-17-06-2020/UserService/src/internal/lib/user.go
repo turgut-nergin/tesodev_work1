@@ -3,14 +3,13 @@ package lib
 import (
 	"time"
 
-	"github.com/turgut-nergin/tesodev_work1/internal/models/response"
-	"github.com/turgut-nergin/tesodev_work1/internal/models/user"
+	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ResponseAssign(user *user.User) *response.User {
-	return &response.User{
-		ID:        user.ID,
+func ResponseAssign(user *models.User) *models.UserResponse {
+	return &models.UserResponse{
+		UserId:    user.UserId,
 		UserName:  user.UserName,
 		Password:  user.Password,
 		Email:     user.Email,
