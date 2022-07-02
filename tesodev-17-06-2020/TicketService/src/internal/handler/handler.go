@@ -23,50 +23,50 @@ func New(repositories repository.Repositories) *Handler {
 		Repositories: repositories,
 	}
 }
-func (h *Handler) CreateTicket(c echo.Context) error {
-	userId := c.QueryParam("userId")
-	categoryId := c.QueryParam("categoryId")
+func (h *Handler) CreateTicket(client user.Client) func(echo.Context) error {
+	return func(c echo.Context) error {
+		userId := c.QueryParam("userId")
+		categoryId := c.QueryParam("categoryId")
 
-	if userId == "" {
-		return errors.ValidationError.WrapErrorCode(3000).WrapDesc("user id cannot be empty").ToResponse(c)
+		if userId == "" {
+			return errors.ValidationError.WrapErrorCode(3000).WrapDesc("user id cannot be empty").ToResponse(c)
+		}
+		if _, err := uuid.Parse(userId); err != nil {
+			return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
+		}
+
+		ticketRequest := models.TicketRequest{}
+
+		if err := json.NewDecoder(c.Request().Body).Decode(&ticketRequest); err != nil {
+			return errors.ValidationError.WrapErrorCode(3002).WrapDesc(err.Error()).ToResponse(c)
+		}
+
+		if err := lib.Validate(ticketRequest); err != nil {
+			return errors.ValidationError.WrapErrorCode(2999).WrapDesc(err.Error()).ToResponse(c)
+
+		}
+
+		isExist, error := client.UserIsExist(userId)
+
+		if error != nil {
+			return error.ToResponse(c)
+
+		}
+
+		if *isExist == false {
+			return errors.UnknownError.WrapErrorCode(3022).WrapDesc("user id not found!").ToResponse(c)
+
+		}
+
+		ticket := lib.RequestAssign(userId, categoryId, &ticketRequest)
+		ticketId, err := h.TicketRepository.InsertTicket(ticket)
+		if err != nil {
+			return errors.UnknownError.WrapErrorCode(3003).WrapDesc(err.Error()).ToResponse(c)
+		}
+
+		return c.JSON(http.StatusCreated, ticketId)
+
 	}
-	if _, err := uuid.Parse(userId); err != nil {
-		return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
-	}
-
-	ticketRequest := models.TicketRequest{}
-
-	if err := json.NewDecoder(c.Request().Body).Decode(&ticketRequest); err != nil {
-		return errors.ValidationError.WrapErrorCode(3002).WrapDesc(err.Error()).ToResponse(c)
-	}
-
-	if err := lib.Validate(ticketRequest); err != nil {
-		return errors.ValidationError.WrapErrorCode(2999).WrapDesc(err.Error()).ToResponse(c)
-
-	}
-
-	client := user.NewClient("http://localhost:8080")
-
-	isExist, err := client.UserIsExist(userId)
-
-	if err != nil {
-		return errors.UnknownError.WrapErrorCode(3011).WrapDesc(err.Error()).ToResponse(c)
-
-	}
-
-	if *isExist == false {
-		return errors.UnknownError.WrapErrorCode(3022).WrapDesc("user id not found!").ToResponse(c)
-
-	}
-
-	ticket := lib.RequestAssign(userId, categoryId, &ticketRequest)
-	ticketId, err := h.TicketRepository.InsertTicket(ticket)
-	if err != nil {
-		return errors.UnknownError.WrapErrorCode(3003).WrapDesc(err.Error()).ToResponse(c)
-	}
-
-	return c.JSON(http.StatusCreated, ticketId)
-
 }
 
 func (h *Handler) DeleteTicket(c echo.Context) error {

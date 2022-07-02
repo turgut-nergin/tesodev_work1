@@ -12,6 +12,7 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
 	"github.com/turgut-nergin/tesodev_work1/internal/routes"
+	"github.com/turgut-nergin/tesodev_work1/pkg/user"
 )
 
 func InitRepository(config config.Config) repository.Repositories {
@@ -24,6 +25,13 @@ func InitRepository(config config.Config) repository.Repositories {
 	return modelRepo
 }
 
+func GetClients() map[string]user.Client {
+	return map[string]user.Client{
+		"userClient":     *user.NewClient("http://localhost:8080"),
+		"categoryClient": *user.NewClient("http://localhost:8080"),
+	}
+}
+
 func main() {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("env load error")
@@ -33,7 +41,8 @@ func main() {
 	repositories := InitRepository(config)
 	handler := handler.New(repositories)
 	echo := echo.New()
-	routes.GetRouter(echo, handler)
+	clients := GetClients()
+	routes.GetRouter(echo, handler, clients)
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error env file")
 	}
