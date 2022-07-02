@@ -23,9 +23,9 @@ func RequestAssign(userId string, categoryId string, ticketRequest *models.Ticke
 
 }
 
-func ResponseAssign(answers []models.Answer, tickets *models.Ticket) *models.TicketResponse {
+func TicketResponseAssign(answers []models.Answer, tickets *models.Ticket) *models.TicketResponse {
 	return &models.TicketResponse{
-		Answers:        answers,
+		Answers:        answerAssign(answers),
 		Body:           tickets.Body,
 		CreatedAt:      time.Unix(tickets.CreatedAt, 0),
 		UpdatedAt:      time.Unix(tickets.UpdatedAt, 0),
@@ -37,4 +37,21 @@ func ResponseAssign(answers []models.Answer, tickets *models.Ticket) *models.Tic
 		CreatedBy:      tickets.CreatedBy,
 	}
 
+}
+
+func answerAssign(answers []models.Answer) []models.AnswerResponse {
+	answersResponse := []models.AnswerResponse{}
+
+	for _, answer := range answers {
+		answerResponse := models.AnswerResponse{
+			CreatedAt: time.Unix(answer.CreatedAt, 0),
+			UpdatedAt: time.Unix(answer.UpdatedAt, 0),
+			Body:      answer.Body,
+			TicketId:  answer.TicketId,
+			UserId:    answer.UserId,
+			Id:        answer.Id,
+		}
+		answersResponse = append(answersResponse, answerResponse)
+	}
+	return answersResponse
 }
