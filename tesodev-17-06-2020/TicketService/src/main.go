@@ -7,6 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
+	"github.com/turgut-nergin/tesodev_work1/client"
 	"github.com/turgut-nergin/tesodev_work1/config"
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
@@ -24,6 +25,13 @@ func InitRepository(config config.Config) repository.Repositories {
 	return modelRepo
 }
 
+func GetClients() map[string]client.Client {
+	return map[string]client.Client{
+		"userClient":     *client.NewClient("http://localhost:8080"),
+		"categoryClient": *client.NewClient("http://localhost:8082"),
+	}
+}
+
 func main() {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("env load error")
@@ -33,10 +41,10 @@ func main() {
 	repositories := InitRepository(config)
 	handler := handler.New(repositories)
 	echo := echo.New()
-	routes.GetRouter(echo, handler)
+	clients := GetClients()
+	routes.GetRouter(echo, handler, clients)
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error env file")
 	}
-	log.Fatal(echo.Start(":8080"))
-
+	log.Fatal(echo.Start(":8081"))
 }

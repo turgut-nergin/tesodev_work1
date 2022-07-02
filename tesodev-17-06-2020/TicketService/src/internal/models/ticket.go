@@ -5,17 +5,17 @@ import (
 )
 
 type TicketResponse struct {
-	Id             string       `json:"_id"`
-	Subject        string       `json:"subject"`
-	Body           string       `json:"body"`
-	Category       Category     `json:"category"`
-	Attachments    []Attachment `json:"attachments"`
-	Answers        []Answer     `json:"answers,omitempty"`
-	CreatedBy      string       `json:"createdBy"`
-	Status         string       `json:"status"`
-	LastAnsweredAt time.Time    `json:"lastAnsweredAt,omitempty"`
-	CreatedAt      time.Time    `json:"createdAt,omitempty"`
-	UpdatedAt      time.Time    `json:"updatedAt,omitempty"`
+	Id             string           `json:"_id"`
+	Subject        string           `json:"subject"`
+	Body           string           `json:"body"`
+	Category       Category         `json:"category"`
+	Attachments    []Attachment     `json:"attachments"`
+	Answers        []AnswerResponse `json:"answers,omitempty"`
+	CreatedBy      string           `json:"createdBy"`
+	Status         string           `json:"status"`
+	LastAnsweredAt time.Time        `json:"lastAnsweredAt,omitempty"`
+	CreatedAt      time.Time        `json:"createdAt,omitempty"`
+	UpdatedAt      time.Time        `json:"updatedAt,omitempty"`
 }
 
 type Ticket struct {
@@ -53,15 +53,17 @@ type Category struct {
 type Answer struct {
 	Id        string `bson:"_id,omitempty"`
 	Body      string `bson:"body" json:"body"`
-	CreatedBy string `bson:"createdBy,omitempty"`
+	TicketId  string `bson:"ticketId,omitempty"`
+	UserId    string `bson:"userId,omitempty"`
 	CreatedAt int64  `bson:"createdAt,omitempty"`
 	UpdatedAt int64  `bson:"updatedAt,omitempty"`
 }
 
 type AnswerResponse struct {
 	Id        string    `json:"_id,omitempty"`
-	Body      string    `json:"ticketId"`
-	CreatedBy string    `json:"createdBy"`
+	Body      string    `json:"body"`
+	UserId    string    `json:"userId"`
+	TicketId  string    `json:"ticketId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

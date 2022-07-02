@@ -4,17 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type AnswerRepository interface {
 	GetAnswers(ticketId string) ([]models.Answer, error)
-	UpsertAnswer(id string, answer *models.Answer) (*int64, error)
 	DeleteAnswer(ticketId string) (int64, error)
+	UpdateAnswer(answer *models.Answer) (*int64, error)
+	CreateAnswer(answer *models.Answer) (*string, error)
 }
 
 func NewAnswer(mongoClient *mongo.Collection) *Repository {
@@ -25,7 +24,7 @@ func (r *Repository) GetAnswers(ticketId string) ([]models.Answer, error) {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
 
-	cursor, err := r.collection.Find(context, bson.M{"createdBy": ticketId})
+	cursor, err := r.collection.Find(context, bson.M{"ticketId": ticketId})
 
 	if err != nil {
 		return nil, err
@@ -38,23 +37,29 @@ func (r *Repository) GetAnswers(ticketId string) ([]models.Answer, error) {
 	return answers, nil
 }
 
-func (r *Repository) UpsertAnswer(id string, answer *models.Answer) (*int64, error) {
+func (r *Repository) UpdateAnswer(answer *models.Answer) (*int64, error) {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
 	defer cancel()
-	filter := bson.M{"_id": id}
+	filter := bson.M{"_id": answer.Id}
 
-	update := bson.M{
-		"$setOnInsert": bson.M{
-			"createdAt": lib.TimeStampNow(),
-		},
-		"$set": answer}
-	opts := options.Update().SetUpsert(true)
-	result, err := r.collection.UpdateOne(context, filter, update, opts)
+	result, err := r.collection.UpdateOne(context, filter, answer)
 	if err != nil {
 		return nil, err
 	}
 	return &result.ModifiedCount, nil
+}
+
+func (r *Repository) CreateAnswer(answer *models.Answer) (*string, error) {
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if _, err := r.collection.InsertOne(context, answer); err != nil {
+		return nil, err
+	}
+
+	return &answer.Id, nil
+
 }
 
 func (r *Repository) DeleteAnswer(ticketId string) (int64, error) {
