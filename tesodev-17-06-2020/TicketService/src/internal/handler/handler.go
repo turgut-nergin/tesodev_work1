@@ -11,6 +11,7 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"github.com/turgut-nergin/tesodev_work1/pkg/user"
 )
 
 type Handler struct {
@@ -41,6 +42,20 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 
 	if err := lib.Validate(ticketRequest); err != nil {
 		return errors.ValidationError.WrapErrorCode(2999).WrapDesc(err.Error()).ToResponse(c)
+
+	}
+
+	client := user.NewClient("http://localhost:8080")
+
+	isExist, err := client.UserIsExist(userId)
+
+	if err != nil {
+		return errors.UnknownError.WrapErrorCode(3011).WrapDesc(err.Error()).ToResponse(c)
+
+	}
+
+	if *isExist == false {
+		return errors.UnknownError.WrapErrorCode(3022).WrapDesc("user id not found!").ToResponse(c)
 
 	}
 

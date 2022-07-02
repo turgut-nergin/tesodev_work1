@@ -37,6 +37,6 @@ func main() {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal("Error env file")
 	}
-	log.Fatal(echo.Start(":8080"))
+	log.Fatal(echo.Start(":8081"))
 
 }

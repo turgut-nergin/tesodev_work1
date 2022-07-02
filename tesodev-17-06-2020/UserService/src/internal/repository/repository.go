@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
@@ -21,9 +22,11 @@ func New(mongoClient *mongo.Collection) *Repository {
 }
 
 func (r *Repository) Get(id string) (*models.User, error) {
+	context, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
 	user := models.User{}
 
-	if err := r.db.FindOne(context.Background(), bson.M{"_id": id}).Decode(&user); err != nil {
+	if err := r.db.FindOne(context, bson.M{"_id": id}).Decode(&user); err != nil {
 		return nil, err
 	}
 

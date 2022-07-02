@@ -24,7 +24,7 @@ func New(repository *repository.Repository) *Handler {
 
 func (h *Handler) GetUser(c echo.Context) error {
 
-	id := c.Param("userId")
+	id := c.QueryParam("userId")
 
 	if _, err := uuid.Parse(id); err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
@@ -115,6 +115,28 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	}
 
 	if deleteResult == 0 {
+		return c.JSON(http.StatusNotFound, false)
+	}
+
+	return c.JSON(http.StatusOK, true)
+}
+
+func (h *Handler) Validate(c echo.Context) error {
+	id := c.QueryParam("userId")
+	_, err := uuid.Parse(id)
+
+	if err != nil {
+		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
+	}
+
+	userInfo, err := h.repository.Get(id)
+
+	if err != nil {
+		return errors.UnknownError.WrapErrorCode(1000).
+			WrapDesc(err.Error()).ToResponse(c)
+	}
+
+	if userInfo == nil {
 		return c.JSON(http.StatusNotFound, false)
 	}
 
