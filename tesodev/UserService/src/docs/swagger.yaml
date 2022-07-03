@@ -1,0 +1,151 @@
+basePath: /
+definitions:
+  errors.Error:
+    properties:
+      applicationName:
+        type: string
+      description:
+        type: string
+      errorCode:
+        type: integer
+      operation:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+  models.UserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      type:
+        type: string
+      userName:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: User Service.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: USER SERVICE
+  version: "1.0"
+paths:
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Validate User
+      parameters:
+      - description: userId
+        in: query
+        name: userId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Validate User
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create User and Update User
+      parameters:
+      - description: For upsert an User
+        in: body
+        name: models.UserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Update and Create User
+      tags:
+      - users
+  /user/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete User
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Delete User
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: get id
+      parameters:
+      - description: user ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: get user by id
+      tags:
+      - users
+schemes:
+- http
+swagger: "2.0"

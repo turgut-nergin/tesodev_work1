@@ -1,0 +1,47 @@
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/turgut-nergin/tesodev_work1/docs"
+
+	"github.com/turgut-nergin/tesodev_work1/config"
+	"github.com/turgut-nergin/tesodev_work1/internal/handler"
+	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
+	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"github.com/turgut-nergin/tesodev_work1/internal/routes"
+)
+
+// @title CATEGORY SERVICE
+// @version 1.0
+// @description Category Service.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8082
+// @schemes http
+
+// @BasePath /
+
+func main() {
+	config := config.EnvConfig["local"]
+	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
+	client := mongo.MongoClient(url)
+	collection := client.Database(config.DBName).Collection(config.CollectionName)
+	repo := repository.New(collection)
+	handler := handler.New(repo)
+	echo := echo.New()
+	routes.GetRouter(echo, handler)
+	echo.Use(middleware.CORS())
+	log.Fatal(echo.Start(":8082"))
+
+}

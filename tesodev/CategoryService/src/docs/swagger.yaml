@@ -1,0 +1,139 @@
+basePath: /
+definitions:
+  errors.Error:
+    properties:
+      applicationName:
+        type: string
+      description:
+        type: string
+      errorCode:
+        type: integer
+      operation:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+  models.CategoryRequest:
+    properties:
+      name:
+        type: string
+    type: object
+host: localhost:8082
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Category Service.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: CATEGORY SERVICE
+  version: "1.0"
+paths:
+  /category:
+    get:
+      consumes:
+      - application/json
+      description: Get Category by ID
+      parameters:
+      - description: categoryId
+        in: query
+        name: categoryId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get Category by Id
+      tags:
+      - cateroies
+    post:
+      consumes:
+      - application/json
+      description: Create Category
+      parameters:
+      - description: For Create a Categry
+        in: body
+        name: models.CategoryRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Create Category
+      tags:
+      - cateroies
+  /category/{categoryId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Category by ID
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Delete Category
+      tags:
+      - cateroies
+    put:
+      consumes:
+      - application/json
+      description: Update Category by ID
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Update Category
+      tags:
+      - cateroies
+schemes:
+- http
+swagger: "2.0"
