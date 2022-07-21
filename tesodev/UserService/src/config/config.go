@@ -7,6 +7,7 @@ type Config struct {
 	CollectionName string
 	UserName       string
 	Password       string
+	MaxPageLimit   int64
 }
 
 var EnvConfig = map[string]Config{
@@ -18,5 +19,6 @@ var EnvConfig = map[string]Config{
 		CollectionName: "users",
 		UserName:       "negrin",
 		Password:       "Naciye.111",
+		MaxPageLimit:   100,
 	},
 }

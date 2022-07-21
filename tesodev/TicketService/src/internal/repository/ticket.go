@@ -4,28 +4,34 @@ import (
 	"context"
 	"time"
 
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
+	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type TicketRepository interface {
-	InsertTicket(ticket *models.Ticket) (*string, error)
+	InsertTicket(ticket *models.Ticket) (*string, *errors.Error)
 	DeleteTicket(id string) (int64, error)
 	GetTicket(id string) (*models.Ticket, error)
+	Update(ticket models.Ticket) (*int64, *errors.Error)
+	Find(limit int64, offset int64, filter map[string]interface{}, sortField string, sortDirection int) (*models.TicketRows, *errors.Error)
 }
 
 func NewTicket(mongoClient *mongo.Collection) *Repository {
 	return &Repository{mongoClient}
 }
 
-func (r *Repository) InsertTicket(ticket *models.Ticket) (*string, error) {
+func (r *Repository) InsertTicket(ticket *models.Ticket) (*string, *errors.Error) {
 
 	context, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
 
 	if _, err := r.collection.InsertOne(context, ticket); err != nil {
-		return nil, err
+
+		return nil, errors.UnknownError.WrapOperation("repository").WrapErrorCode(4062).WrapDesc(err.Error())
 	}
 
 	return &ticket.Id, nil
@@ -49,4 +55,62 @@ func (r *Repository) DeleteTicket(id string) (int64, error) {
 		return 0, err
 	}
 	return result.DeletedCount, nil
+}
+
+func (r *Repository) Update(ticket models.Ticket) (*int64, *errors.Error) {
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+
+	defer cancel()
+	filter := bson.M{"_id": ticket.Id}
+
+	result, err := r.collection.UpdateOne(context, filter, ticket)
+	if err != nil {
+		return nil, errors.UnknownError.WrapErrorCode(4062).WrapDesc(err.Error()).WrapOperation("repository")
+	}
+	return &result.ModifiedCount, nil
+}
+
+func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, sortField string, sortDirection int) (*models.TicketRows, *errors.Error) {
+
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	totalCount, err := r.collection.CountDocuments(context, filter)
+
+	if err != nil {
+
+		return nil, errors.FindFailed.WrapErrorCode(4000)
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+
+	if sortField != "" && sortDirection == 0 {
+		options = options.SetSort(bson.D{{sortField, sortDirection}})
+	}
+
+	cur, err := r.collection.Find(context, filter, options)
+
+	if err != nil {
+		return nil, errors.FindFailed.WrapErrorCode(4001)
+	}
+
+	var tickets []*models.Ticket
+
+	err = cur.All(context, &tickets)
+
+	if err != nil {
+		return nil, errors.UnknownError.WrapErrorCode(4002)
+	}
+
+	var ticketsResponse []models.TicketResponse
+
+	for _, ticket := range tickets {
+		ticketResponse := lib.TicketResponseAssign(ticket)
+		ticketsResponse = append(ticketsResponse, *ticketResponse)
+	}
+
+	return &models.TicketRows{
+		RowCount: totalCount,
+		Tickets:  ticketsResponse,
+	}, nil
 }

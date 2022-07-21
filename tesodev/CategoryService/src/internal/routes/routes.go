@@ -7,9 +7,10 @@ import (
 )
 
 func GetRouter(echo *echo.Echo, handler *handler.Handler) {
-	echo.GET("/category", handler.GetCategory)
+	echo.GET("/category/:categoryId", handler.GetCategory)
 	echo.POST("/category", handler.CreateCategory)
 	echo.PUT("/category/:categoryId", handler.UpdateCategory)
 	echo.DELETE("/category/:categoryId", handler.DeleteCategory)
+	echo.GET("/category", handler.GetCategories)
 	echo.GET("/swagger/*", echoSwagger.WrapHandler)
 }

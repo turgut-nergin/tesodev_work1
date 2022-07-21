@@ -30,3 +30,8 @@ type UserRequest struct {
 	Email    string `json:"email,omitempty"`
 	Type     string `json:"type,omitempty"`
 }
+
+type UserRows struct {
+	RowCount int64          `json:"rowCount"`
+	Users    []UserResponse `json:"users"`
+}

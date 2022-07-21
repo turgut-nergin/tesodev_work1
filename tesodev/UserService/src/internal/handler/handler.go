@@ -6,20 +6,26 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/turgut-nergin/tesodev_work1/config"
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
 	repository *repository.Repository
+	cfg        *config.Config
 }
 
-func New(repository *repository.Repository) *Handler {
-	return &Handler{repository: repository}
+func New(repository *repository.Repository, config *config.Config) *Handler {
+	return &Handler{repository: repository,
+		cfg: config,
+	}
 }
 
 // GetUser
@@ -38,7 +44,6 @@ func (h *Handler) GetUser(c echo.Context) error {
 
 	id := c.Param("userId")
 
-	fmt.Println(id)
 	if _, err := uuid.Parse(id); err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 	}
@@ -172,7 +177,6 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 // @Router /user [get]
 func (h *Handler) Validate(c echo.Context) error {
 	id := c.QueryParam("userId")
-	fmt.Println(id)
 	_, err := uuid.Parse(id)
 
 	if err != nil {
@@ -191,4 +195,70 @@ func (h *Handler) Validate(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, true)
+}
+
+// GetUsers
+// @Summary  Get Users by params
+// @Description Get Users by params
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param userName query string false "userName"
+// @Param email query string false "email"
+// @Param password query string false "password"
+// @Param type query string false "type"
+// @Param limit query string false "limit"
+// @Param offset query string false "offset"
+// @Param sort query string false "sort"
+// @Param direction query string false "direction"
+// @Failure 404 {object} errors.Error
+// @Failure 400 {object} errors.Error
+// @Failure 500 {object} errors.Error
+// @Succes 200 {object} models.CategoryResponse
+// @Router /users [get]
+func (h *Handler) GetUsers(c echo.Context) error {
+
+	limitStr := c.QueryParam("limit")
+	offsetStr := c.QueryParam("offset")
+
+	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
+
+	filter := map[string]interface{}{}
+
+	if userName := c.QueryParam("userName"); userName != "" {
+		filter["userName"] = bson.M{"$regex": primitive.Regex{
+			Pattern: userName,
+			Options: "i",
+		}}
+	}
+
+	if password := c.QueryParam("password"); password != "" {
+		filter["password"] = bson.M{"$regex": primitive.Regex{
+			Pattern: password,
+			Options: "i",
+		}}
+	}
+
+	if email := c.QueryParam("email"); email != "" {
+		filter["email"] = bson.M{"$regex": primitive.Regex{
+			Pattern: email,
+			Options: "i",
+		}}
+	}
+
+	if userType := c.QueryParam("type"); userType != "" {
+		filter["type"] = bson.M{"$regex": primitive.Regex{
+			Pattern: userType,
+			Options: "i",
+		}}
+	}
+
+	sortField := lib.GetAcceptedSortField(c.QueryParam("sort"))              //for example name
+	sortDirection := lib.GetAcceptedSortDirection(c.QueryParam("direction")) //asc desc -> 0,-1
+	tickets, err := h.repository.Find(limit, offset, filter, sortField, sortDirection)
+	if err != nil {
+		return err.ToResponse(c)
+	}
+
+	return c.JSON(http.StatusOK, tickets)
 }

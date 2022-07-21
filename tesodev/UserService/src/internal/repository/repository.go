@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,4 +64,49 @@ func (r *Repository) Upsert(id string, user *models.User) *models.UpSertResult {
 	upsertResult.ModifiedCount = result.ModifiedCount
 
 	return &upsertResult
+}
+
+func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, sortField string, sortDirection int) (*models.UserRows, *errors.Error) {
+
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	totalCount, err := r.db.CountDocuments(context, filter)
+
+	if err != nil {
+
+		return nil, errors.FindFailed.WrapErrorCode(4000)
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+
+	if sortField != "" && sortDirection == 0 {
+		options = options.SetSort(bson.D{{sortField, sortDirection}})
+	}
+
+	cur, err := r.db.Find(context, filter, options)
+
+	if err != nil {
+		return nil, errors.FindFailed.WrapErrorCode(4001)
+	}
+
+	var users []*models.User
+
+	err = cur.All(context, &users)
+
+	if err != nil {
+		return nil, errors.UnknownError.WrapErrorCode(4002)
+	}
+
+	var userResponse []models.UserResponse
+
+	for _, user := range users {
+		ticketResponse := lib.ResponseAssign(user)
+		userResponse = append(userResponse, *ticketResponse)
+	}
+
+	return &models.UserRows{
+		RowCount: totalCount,
+		Users:    userResponse,
+	}, nil
 }

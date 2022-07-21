@@ -14,7 +14,7 @@ func GetRouter(echo *echo.Echo, handler *handler.Handler) {
 	echo.PUT("/ticket/:answerId/answer", handler.UpdateAnswer)
 	echo.GET("/ticket/:ticketId", handler.GetTicket)
 	echo.DELETE("/ticket/:ticketId", handler.DeleteTicket)
-	echo.DELETE("/ticket/:ticketId", handler.DeleteTicket)
+	echo.GET("/ticket", handler.GetTickets)
 	echo.GET("/swagger/*", echoSwagger.WrapHandler)
 
 }

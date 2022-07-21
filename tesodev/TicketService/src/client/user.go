@@ -24,7 +24,7 @@ func (c Client) UserIsExist(id string) (*bool, *errors.Error) {
 	body, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		error := errors.UnknownError.WrapErrorCode(3024).WrapDesc(err.Error())
+		error := errors.UnknownError.WrapErrorCode(3025).WrapDesc(err.Error())
 		return nil, error
 	}
 

@@ -11,6 +11,11 @@ type CategoryResponse struct {
 	UpdatedAt time.Time `json:"updatedAt,omitempty"`
 }
 
+type CategoryRows struct {
+	RowCount   int64       `json:"rowCount"`
+	Categories *[]Category `json:"categories"`
+}
+
 type Category struct {
 	Id        string `bson:"_id,omitempty"`
 	Name      string `json:"name" bson:"name,omitempty"`

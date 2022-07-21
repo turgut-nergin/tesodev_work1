@@ -51,7 +51,7 @@ func main() {
 	config := config.EnvConfig["local"]
 	repositories := InitRepository(config)
 	clients := GetClients()
-	handler := handler.New(repositories, clients)
+	handler := handler.New(repositories, clients, &config)
 	echo := echo.New()
 	routes.GetRouter(echo, handler)
 	log.Fatal(echo.Start(":8081"))

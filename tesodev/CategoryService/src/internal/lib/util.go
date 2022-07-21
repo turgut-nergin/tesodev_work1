@@ -1,7 +1,9 @@
 package lib
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -10,7 +12,7 @@ func TimeStampNow() int64 {
 	return time.Now().In(l).Unix()
 }
 
-func ValidatePaginator(limit, offset string, maxlimit int) (int64, int64) {
+func ValidatePaginator(limit, offset string, maxlimit int64) (int64, int64) {
 	limInt, err := strconv.ParseInt(limit, 10, 64)
 	max := int64(maxlimit)
 	if err != nil || limInt <= 0 {
@@ -25,4 +27,24 @@ func ValidatePaginator(limit, offset string, maxlimit int) (int64, int64) {
 	}
 
 	return limInt, offsetInt
+}
+
+func GetAcceptedSortField(sortValue string) string {
+	if strings.EqualFold(sortValue, "name") {
+		return "name"
+	}
+
+	return ""
+}
+
+func GetAcceptedSortDirection(direction string) int {
+	if strings.EqualFold(direction, "asc") || strings.EqualFold(direction, "1") {
+		fmt.Println(direction)
+
+		return 1
+	}
+	if strings.EqualFold(direction, "desc") || strings.EqualFold(direction, "dsc") || strings.EqualFold(direction, "-1") {
+		return -1
+	}
+	return 0
 }

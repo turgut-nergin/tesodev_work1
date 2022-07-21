@@ -38,4 +38,5 @@ var (
 	UnknownError    = New("user", "", "unknown error", 500, 0)
 	ValidationError = New("user", "validation", "validation error", 400, 0)
 	NotFound        = New("user", "handler", "not found user", 404, 0)
+	FindFailed      = New("category", "Repository", "Categories find failed! ", 500, 0)
 )

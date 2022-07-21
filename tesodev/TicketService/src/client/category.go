@@ -30,8 +30,11 @@ func (c Client) GetCategory(id string) (*models.Category, *errors.Error) {
 	var category models.Category
 
 	if err := json.NewDecoder(body).Decode(&category); err != nil {
-
-		return nil, errors.UnknownError.WrapErrorCode(3037).WrapDesc(err.Error())
+		var errResult errors.Error
+		if err := json.NewDecoder(body).Decode(&errResult); err != nil {
+			return nil, errors.UnknownError.WrapOperation("category client").WrapErrorCode(3037).WrapDesc(err.Error())
+		}
+		return nil, &errResult
 	}
 
 	return &category, nil

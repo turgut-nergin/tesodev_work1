@@ -2,10 +2,15 @@ package repository
 
 import (
 	"context"
+	"fmt"
+
 	"time"
+
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -61,16 +66,41 @@ func (r *Repository) Update(category *models.Category) (*int64, error) {
 
 }
 
-// func (r *Repository) Find(limit int64, offset int64, filter []primitive.D) (*int64, error) {
-// 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
-// 	defer cancel()
+func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, sortField string, sortDirection int) (*models.CategoryRows, *errors.Error) {
 
-// 	filter := bson.M{"_id": category.Id}
-// 	result, err := r.collection.UpdateOne(context, filter, category)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-// 	return &result.ModifiedCount, nil
+	totalCount, err := r.collection.CountDocuments(context, filter)
 
-// }
+	if err != nil {
+
+		return nil, errors.FindFailed.WrapErrorCode(4000)
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+
+	if sortField != "" && sortDirection == 0 {
+		options = options.SetSort(bson.D{{sortField, sortDirection}})
+	}
+
+	cur, err := r.collection.Find(context, filter, options)
+	fmt.Println(err)
+
+	if err != nil {
+		return nil, errors.FindFailed.WrapErrorCode(4001)
+	}
+
+	var categories []models.Category
+
+	err = cur.All(context, &categories)
+
+	if err != nil {
+		return nil, errors.UnknownError.WrapErrorCode(4002)
+	}
+
+	return &models.CategoryRows{
+		RowCount:   totalCount,
+		Categories: &categories,
+	}, nil
+}

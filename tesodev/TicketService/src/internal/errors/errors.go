@@ -29,6 +29,11 @@ func (e *Error) WrapDesc(desc string) *Error {
 	return e
 }
 
+func (e *Error) WrapOperation(operation string) *Error {
+	e.Operation = operation
+	return e
+}
+
 func (e *Error) WrapErrorCode(errorCode int) *Error {
 	e.ErrorCode = errorCode
 	return e
@@ -38,4 +43,5 @@ var (
 	UnknownError    = New("ticket", "", "unknown error", 500, 0)
 	ValidationError = New("ticket", "validation", "validation error", 400, 0)
 	NotFound        = New("ticket", "handler", "not found user", 404, 0)
+	FindFailed      = New("ticket", "Repository", "Ticket find failed! ", 500, 0)
 )

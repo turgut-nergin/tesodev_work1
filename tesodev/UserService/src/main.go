@@ -39,7 +39,7 @@ func main() {
 	client := mongo.MongoClient(url)
 	collection := client.Database(config.DBName).Collection(config.CollectionName)
 	repo := repository.New(collection)
-	handler := handler.New(repo)
+	handler := handler.New(repo, &config)
 	echo := echo.New()
 
 	echo.Use(middleware.CORS())

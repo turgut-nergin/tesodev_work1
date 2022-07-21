@@ -12,6 +12,6 @@ func GetRouter(echo *echo.Echo, handler *handler.Handler) {
 	echo.POST("/user", handler.UpsertUser)
 	echo.DELETE("/user/:userId", handler.DeleteUser)
 	echo.GET("/user", handler.Validate)
+	echo.GET("/users", handler.GetUsers)
 	echo.GET("/swagger/*", echoSwagger.WrapHandler)
-
 }

@@ -23,7 +23,7 @@
     "paths": {
         "/category": {
             "get": {
-                "description": "Get Category by ID",
+                "description": "Get Categories by params",
                 "consumes": [
                     "application/json"
                 ],
@@ -33,12 +33,36 @@
                 "tags": [
                     "cateroies"
                 ],
-                "summary": "Get Category by Id",
+                "summary": "Get Categories by params",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "categoryId",
-                        "name": "categoryId",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "direction",
+                        "name": "direction",
                         "in": "query"
                     }
                 ],
@@ -109,6 +133,47 @@
             }
         },
         "/category/{categoryId}": {
+            "get": {
+                "description": "Get Category by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cateroies"
+                ],
+                "summary": "Get Category by Id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "categoryId",
+                        "name": "categoryId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Update Category by ID",
                 "consumes": [

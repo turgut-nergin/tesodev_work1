@@ -4,25 +4,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/turgut-nergin/tesodev_work1/client"
+	"github.com/turgut-nergin/tesodev_work1/config"
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Handler struct {
 	repository.Repositories
 	clients map[string]client.Client
+	cfg     *config.Config
 }
 
-func New(repositories repository.Repositories, client map[string]client.Client) *Handler {
+func New(repositories repository.Repositories, client map[string]client.Client, config *config.Config) *Handler {
 	return &Handler{
 		Repositories: repositories,
 		clients:      client,
+		cfg:          config,
 	}
 }
 
@@ -33,7 +39,7 @@ func New(repositories repository.Repositories, client map[string]client.Client) 
 // @Accept json
 // @Produce json
 // @Param models.TicketRequest body models.TicketRequest true "For Create a Ticket"
-// @Param ticketId query string false "Ticket ID"
+// @Param categoryId query string false "Category ID"
 // @Param userId query string false "User ID"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error
@@ -51,6 +57,13 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 		return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
 	}
 
+	if categoryId == "" {
+		return errors.ValidationError.WrapErrorCode(3000).WrapDesc("category id cannot be empty").ToResponse(c)
+	}
+	if _, err := uuid.Parse(categoryId); err != nil {
+		return errors.ValidationError.WrapErrorCode(3001).WrapDesc(err.Error()).ToResponse(c)
+	}
+
 	ticketRequest := models.TicketRequest{}
 
 	if err := json.NewDecoder(c.Request().Body).Decode(&ticketRequest); err != nil {
@@ -63,10 +76,15 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 	}
 
 	isExist, error := h.clients["userClient"].UserIsExist(userId)
-
 	if error != nil {
 		return error.ToResponse(c)
 
+	}
+
+	category, err := h.clients["category"].GetCategory(categoryId)
+
+	if category == nil {
+		return err.ToResponse(c)
 	}
 
 	if *isExist == false {
@@ -80,7 +98,7 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 
 	ticketId, err := h.TicketRepository.InsertTicket(ticket)
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(3003).WrapDesc(err.Error()).ToResponse(c)
+		return err.ToResponse(c)
 	}
 
 	return c.JSON(http.StatusCreated, ticketId)
@@ -93,6 +111,7 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 // @Tags Tickets
 // @Accept json
 // @Produce json
+// @Param ticketId path string true "Ticket Id"
 // @Failure 404 {object} bool
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
@@ -126,7 +145,7 @@ func (h *Handler) DeleteTicket(c echo.Context) error {
 // @Tags Tickets
 // @Accept json
 // @Produce json
-// @Param ticketId query string false "Ticket ID"
+// @Param ticketId path string true "Ticket Id"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
@@ -135,6 +154,7 @@ func (h *Handler) DeleteTicket(c echo.Context) error {
 func (h *Handler) GetTicket(c echo.Context) error {
 	ticketId := c.Param("ticketId")
 
+	fmt.Println(ticketId)
 	if _, err := uuid.Parse(ticketId); err != nil {
 		return errors.ValidationError.WrapErrorCode(3009).WrapDesc(err.Error()).ToResponse(c)
 	}
@@ -156,9 +176,9 @@ func (h *Handler) GetTicket(c echo.Context) error {
 		return error.ToResponse(c)
 	}
 
-	answers, err := h.AnswerRepository.GetAnswers(ticketId)
+	answers, error := h.AnswerRepository.GetAnswers(ticketId)
 
-	if err != nil {
+	if error != nil {
 		return errors.UnknownError.WrapErrorCode(3011).WrapDesc(err.Error()).ToResponse(c)
 	}
 
@@ -178,11 +198,12 @@ func (h *Handler) GetTicket(c echo.Context) error {
 // @Tags Answers
 // @Accept json
 // @Produce json
+// @Param answerId path string true "Answer Id"
 // @Failure 404 {object} bool
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} bool
-// @Router /ticket/{ticketId} [PUT]
+// @Router /ticket/{answerId} [PUT]
 func (h *Handler) UpdateAnswer(c echo.Context) error {
 	answerId := c.Param("answerId")
 	if _, err := uuid.Parse(answerId); err != nil {
@@ -198,6 +219,7 @@ func (h *Handler) UpdateAnswer(c echo.Context) error {
 	answer.UpdatedAt = lib.TimeStampNow()
 	answer.Id = answerId
 	modifiedCount, err := h.AnswerRepository.UpdateAnswer(&answer)
+
 	if err != nil {
 		return errors.UnknownError.WrapErrorCode(2027).WrapDesc(err.Error()).ToResponse(c)
 
@@ -206,6 +228,26 @@ func (h *Handler) UpdateAnswer(c echo.Context) error {
 	if *modifiedCount == 0 {
 		return c.JSON(http.StatusNotFound, false)
 
+	}
+
+	answerR, error := h.AnswerRepository.GetAnswer(answerId)
+
+	if error != nil {
+		return error.ToResponse(c)
+	}
+
+	ticket := models.Ticket{}
+	ticket.Id = answerR.TicketId
+	ticket.LastAnsweredAt = lib.TimeStampNow()
+
+	modifiedCount, error = h.TicketRepository.Update(ticket)
+
+	if error != nil {
+		return error.ToResponse(c)
+	}
+
+	if *modifiedCount == 0 {
+		return c.JSON(http.StatusNotFound, false)
 	}
 
 	return c.JSON(http.StatusOK, true)
@@ -218,6 +260,7 @@ func (h *Handler) UpdateAnswer(c echo.Context) error {
 // @Tags Answers
 // @Accept json
 // @Produce json
+// @Param ticketId path string true "Ticket Id"
 // @Param userId query string false "User ID"
 // @Param models.Answer body models.Answer true "For Create an Answer"
 // @Failure 404 {object} bool
@@ -266,4 +309,77 @@ func (h *Handler) CreateAnswer(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, answerId)
 
+}
+
+// GetTickets
+// @Summary  Get Tickets by params
+// @Description Get Tickets by params
+// @Tags Tickets
+// @Accept json
+// @Produce json
+// @Param subject query string false "subject"
+// @Param body query string false "body"
+// @Param status query string false "status"
+// @Param limit query string false "limit"
+// @Param offset query string false "offset"
+// @Param sort query string false "sort"
+// @Param direction query string false "direction"
+// @Failure 404 {object} errors.Error
+// @Failure 400 {object} errors.Error
+// @Failure 500 {object} errors.Error
+// @Succes 200 {object} models.CategoryResponse
+// @Router /tickets [get]
+func (h *Handler) GetTickets(c echo.Context) error {
+
+	limitStr := c.QueryParam("limit")
+	offsetStr := c.QueryParam("offset")
+
+	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
+
+	filter := map[string]interface{}{}
+
+	if subject := c.QueryParam("subject"); subject != "" {
+		filter["subject"] = bson.M{"$regex": primitive.Regex{
+			Pattern: subject,
+			Options: "i",
+		}}
+	}
+
+	if body := c.QueryParam("body"); body != "" {
+		filter["body"] = bson.M{"$regex": primitive.Regex{
+			Pattern: body,
+			Options: "i",
+		}}
+	}
+
+	if status := c.QueryParam("status"); status != "" {
+		filter["status"] = bson.M{"$regex": primitive.Regex{
+			Pattern: status,
+			Options: "i",
+		}}
+	}
+
+	lastAnsweredAt := c.QueryParam("lastAnsweredAt")
+
+	if lastAnsweredAt != "" {
+		date, error := time.Parse("2006-01-02", lastAnsweredAt)
+
+		if error != nil {
+			return errors.ValidationError.WrapErrorCode(4050).WrapDesc("last lastAnsweredAt parse error").ToResponse(c)
+		}
+		l, _ := time.LoadLocation("Europe/Istanbul")
+		timeStamp := date.In(l).Unix()
+
+		filter["lastAnsweredAt"] = bson.M{"$gte": timeStamp}
+
+	}
+
+	sortField := lib.GetAcceptedSortField(c.QueryParam("sort"))              //for example name
+	sortDirection := lib.GetAcceptedSortDirection(c.QueryParam("direction")) //asc desc -> 0,-1
+	tickets, err := h.TicketRepository.Find(limit, offset, filter, sortField, sortDirection)
+	if err != nil {
+		return err.ToResponse(c)
+	}
+
+	return c.JSON(http.StatusOK, tickets)
 }

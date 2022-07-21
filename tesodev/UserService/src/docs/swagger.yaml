@@ -146,6 +146,62 @@ paths:
       summary: get user by id
       tags:
       - users
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get Users by params
+      parameters:
+      - description: userName
+        in: query
+        name: userName
+        type: string
+      - description: email
+        in: query
+        name: email
+        type: string
+      - description: password
+        in: query
+        name: password
+        type: string
+      - description: type
+        in: query
+        name: type
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: string
+      - description: offset
+        in: query
+        name: offset
+        type: string
+      - description: sort
+        in: query
+        name: sort
+        type: string
+      - description: direction
+        in: query
+        name: direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get Users by params
+      tags:
+      - Users
 schemes:
 - http
 swagger: "2.0"

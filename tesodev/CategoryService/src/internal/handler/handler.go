@@ -11,6 +11,8 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/labstack/echo/v4"
 )
@@ -20,8 +22,8 @@ type Handler struct {
 	cfg        *config.Config
 }
 
-func New(repository *repository.Repository) *Handler {
-	return &Handler{repository: repository}
+func New(repository *repository.Repository, config *config.Config) *Handler {
+	return &Handler{repository: repository, cfg: config}
 }
 
 // GetCategory
@@ -35,10 +37,10 @@ func New(repository *repository.Repository) *Handler {
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} models.CategoryResponse
-// @Router /category [GET]
+// @Router /category/{categoryId} [GET]
 func (h *Handler) GetCategory(c echo.Context) error {
 
-	id := c.QueryParam("categoryId")
+	id := c.Param("categoryId")
 
 	if _, err := uuid.Parse(id); err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
@@ -167,23 +169,50 @@ func (h *Handler) DeleteCategory(c echo.Context) error {
 	return c.JSON(http.StatusOK, true)
 }
 
-// func (h *Handler) GetCategories(c echo.Context) error {
+// GetCategories
+// @Summary  Get Categories by params
+// @Description Get Categories by params
+// @Tags cateroies
+// @Accept json
+// @Produce json
+// @Param name query string false "name"
+// @Param limit query string false "limit"
+// @Param offset query string false "offset"
+// @Param sort query string false "sort"
+// @Param direction query string false "direction"
+// @Failure 404 {object} errors.Error
+// @Failure 400 {object} errors.Error
+// @Failure 500 {object} errors.Error
+// @Succes 200 {object} models.CategoryResponse
+// @Router /category [get]
+func (h *Handler) GetCategories(c echo.Context) error {
 
-// 	limitStr := c.QueryParam("limit")
-// 	offsetStr := c.QueryParam("offset")
-// 	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, int(h.cfg.MaxPageLimit))
-// 	filter := []bson.D{}
+	limitStr := c.QueryParam("limit")
+	offsetStr := c.QueryParam("offset")
 
-// 	if name := c.QueryParam("name"); name != "" && len(name) < 10 {
-// 		filter = append(filter, bson.D{{"$regex", primitive.Regex{
-// 			Pattern: name,
-// 			Options: "i",
-// 		}}})
-// 	}
-// 	categories, err := h.repository.Find(limit, offset, filter)
+	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
 
-// 	if err != nil {
+	filter := map[string]interface{}{}
 
-// 	}
+	if name := c.QueryParam("name"); name != "" && len(name) < 10 {
+		filter["name"] = bson.M{"$regex": primitive.Regex{
+			Pattern: name,
+			Options: "i",
+		}}
+	}
 
-// }
+	sortField := lib.GetAcceptedSortField(c.QueryParam("sort"))              //for example name
+	sortDirection := lib.GetAcceptedSortDirection(c.QueryParam("direction")) //asc desc -> 0,-1
+	categories, err := h.repository.Find(limit, offset, filter, sortField, sortDirection)
+
+	if err != nil {
+		response := models.CategoryRows{
+			RowCount:   0,
+			Categories: nil,
+		}
+
+		return c.JSON(200, response)
+	}
+
+	return c.JSON(200, categories)
+}

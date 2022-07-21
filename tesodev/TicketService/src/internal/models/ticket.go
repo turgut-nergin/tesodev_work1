@@ -18,6 +18,11 @@ type TicketResponse struct {
 	UpdatedAt      time.Time        `json:"updatedAt,omitempty"`
 }
 
+type TicketRows struct {
+	RowCount int64            `json:"rowCount"`
+	Tickets  []TicketResponse `json:"tickets"`
+}
+
 type Ticket struct {
 	Id             string       `bson:"_id,omitempty"`
 	Subject        string       `bson:"subject,omitempty"`
