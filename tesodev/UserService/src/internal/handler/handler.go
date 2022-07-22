@@ -70,7 +70,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param userId query string true "user ID"
+// @Param userId query string false "user ID"
 // @Param models.UserRequest body models.UserRequest true "For upsert an User"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error

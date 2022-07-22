@@ -84,8 +84,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "user ID",
                         "name": "userId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "description": "For upsert an User",
