@@ -1,0 +1,74 @@
+version: "3.9"
+services:
+
+  user-service:
+    container_name: user_service
+    build:
+        context: UserService/src
+    image: tesodev/user_service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo-db
+    env_file:
+      - UserService/src/.env
+    networks:
+      service-network:
+        aliases:
+          - user-service
+
+  ticket-service:
+    container_name: ticket_container
+    build:
+      context: TicketService/src
+    image: tesodev/ticket_service
+    ports:
+      - "8081:8081"
+    env_file:
+        - TicketService/src/.env     # path to your .env file
+    depends_on:
+      - mongo-db
+      - user-service
+      - category-service
+    networks:
+      service-network:
+        aliases:
+          - ticket-service
+    restart: on-failure
+
+
+  category-service:
+    container_name: category_container
+    build:
+      context: CategoryService/src
+    image: tesodev/category_service
+    depends_on:
+      - mongo-db
+    env_file:
+      - CategoryService/src/.env     # path to your .env file
+    ports:
+      - "8082:8082" 
+    networks:
+      service-network:
+        aliases:
+          - category-service
+    restart: on-failure
+
+
+  mongo-db:
+    image: mongo
+    ports:
+        - "27017:27017"
+    container_name: mongo_container
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      service-network:
+        aliases:
+          - mongo-db
+          
+volumes:
+  mongo-data:
+
+networks:
+  service-network:
