@@ -88,12 +88,13 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 			Tickets:  nil,
 		}, nil
 	}
-
-	options := options.Find().SetLimit(limit).SetSkip(offset * limit) //pagination set
+	options := options.Find()
 
 	if sortField != "" && sortDirection == 0 {
 		options = options.SetSort(bson.D{{sortField, sortDirection}})
 	}
+
+	options = options.SetLimit(limit).SetSkip(offset * limit) //pagination set
 
 	cur, err := r.collection.Find(context, filter, options)
 

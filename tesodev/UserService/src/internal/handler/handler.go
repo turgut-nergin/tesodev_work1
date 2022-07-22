@@ -222,7 +222,7 @@ func (h *Handler) GetUsers(c echo.Context) error {
 	limitStr := c.QueryParam("limit")
 	offsetStr := c.QueryParam("offset")
 
-	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
+	limit, offset := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
 
 	filter := map[string]interface{}{}
 
