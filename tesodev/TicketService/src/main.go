@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/turgut-nergin/tesodev_work1/client"
 	"github.com/turgut-nergin/tesodev_work1/config"
@@ -45,14 +44,11 @@ func GetClients() map[string]client.Client {
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host ticket-service:8081
+// @host localhost:8081
 // @schemes http
 
 // @BasePath /
 func main() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("env load error")
-	}
 	appEnv := os.Getenv("CURRENT_STATE")
 	config := config.EnvConfig[appEnv]
 	repositories := InitRepository(config)

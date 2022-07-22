@@ -11,7 +11,7 @@ services:
     depends_on:
       - mongo-db
     env_file:
-      - UserService/src/.env  
+      - UserService/src/.env
     networks:
       service-network:
         aliases:

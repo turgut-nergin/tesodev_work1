@@ -18,7 +18,7 @@
         },
         "version": "1.0"
     },
-    "host": "user-service:8080",
+    "host": "localhost:8080",
     "basePath": "/",
     "paths": {
         "/user": {
