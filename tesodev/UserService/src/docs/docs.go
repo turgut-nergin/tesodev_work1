@@ -81,6 +81,13 @@ const docTemplate = `{
                 "summary": "Update and Create User",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "user ID",
+                        "name": "userId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "description": "For upsert an User",
                         "name": "models.UserRequest",
                         "in": "body",
@@ -167,6 +174,15 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Delete User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "400": {
                         "description": "Bad Request",
@@ -213,12 +229,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "email",
                         "name": "email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "password",
-                        "name": "password",
                         "in": "query"
                     },
                     {
@@ -319,7 +329,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "user-service:8080",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
 	Title:            "USER SERVICE",

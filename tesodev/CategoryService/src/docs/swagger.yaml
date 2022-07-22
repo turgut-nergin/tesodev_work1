@@ -18,7 +18,7 @@ definitions:
       name:
         type: string
     type: object
-host: localhost:8082
+host: category-service:8082
 info:
   contact:
     email: support@swagger.io
@@ -32,7 +32,7 @@ info:
   title: CATEGORY SERVICE
   version: "1.0"
 paths:
-  /category:
+  /categories:
     get:
       consumes:
       - application/json
@@ -76,6 +76,34 @@ paths:
       summary: Get Categories by params
       tags:
       - cateroies
+  /category:
+    get:
+      consumes:
+      - application/json
+      description: Get Category by ID
+      parameters:
+      - description: categoryId
+        in: query
+        name: categoryId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get Category by Id
+      tags:
+      - cateroies
     post:
       consumes:
       - application/json
@@ -110,6 +138,12 @@ paths:
       consumes:
       - application/json
       description: Delete Category by ID
+      parameters:
+      - description: Category Id
+        in: path
+        name: categoryId
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -128,37 +162,22 @@ paths:
       summary: Delete Category
       tags:
       - cateroies
-    get:
-      consumes:
-      - application/json
-      description: Get Category by ID
-      parameters:
-      - description: categoryId
-        in: query
-        name: categoryId
-        type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Get Category by Id
-      tags:
-      - cateroies
     put:
       consumes:
       - application/json
       description: Update Category by ID
+      parameters:
+      - description: Category Id
+        in: path
+        name: categoryId
+        required: true
+        type: string
+      - description: For Update a Categry
+        in: body
+        name: models.CategoryRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.CategoryRequest'
       produces:
       - application/json
       responses:

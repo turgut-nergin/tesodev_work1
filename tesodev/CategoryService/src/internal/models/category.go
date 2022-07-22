@@ -18,7 +18,7 @@ type CategoryRows struct {
 
 type Category struct {
 	Id        string `bson:"_id,omitempty"`
-	Name      string `json:"name" bson:"name,omitempty"`
+	Name      string `bson:"name,omitempty"`
 	CreatedAt int64  `bson:",omitempty"`
 	UpdatedAt int64  `bson:",omitempty"`
 }

@@ -63,7 +63,7 @@ func (r *Repository) Update(ticket models.Ticket) (*int64, *errors.Error) {
 	defer cancel()
 	filter := bson.M{"_id": ticket.Id}
 
-	result, err := r.collection.UpdateOne(context, filter, ticket)
+	result, err := r.collection.UpdateOne(context, filter, bson.M{"$set": ticket})
 	if err != nil {
 		return nil, errors.UnknownError.WrapErrorCode(4062).WrapDesc(err.Error()).WrapOperation("repository")
 	}
@@ -82,7 +82,14 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		return nil, errors.FindFailed.WrapErrorCode(4000)
 	}
 
-	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+	if totalCount <= offset*limit {
+		return &models.TicketRows{
+			RowCount: totalCount,
+			Tickets:  nil,
+		}, nil
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(offset * limit) //pagination set
 
 	if sortField != "" && sortDirection == 0 {
 		options = options.SetSort(bson.D{{sortField, sortDirection}})

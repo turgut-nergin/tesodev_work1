@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/turgut-nergin/tesodev_work1/docs"
@@ -27,14 +29,18 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8080
+// @host user-service:8080
 // @schemes http
 
 // @BasePath /
 
 func main() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("env load error")
+	}
+	appEnv := os.Getenv("CURRENT_STATE")
 
-	config := config.EnvConfig["local"]
+	config := config.EnvConfig[appEnv]
 	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
 	client := mongo.MongoClient(url)
 	collection := client.Database(config.DBName).Collection(config.CollectionName)

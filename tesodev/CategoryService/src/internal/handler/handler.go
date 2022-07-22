@@ -37,10 +37,10 @@ func New(repository *repository.Repository, config *config.Config) *Handler {
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} models.CategoryResponse
-// @Router /category/{categoryId} [GET]
+// @Router /category [GET]
 func (h *Handler) GetCategory(c echo.Context) error {
 
-	id := c.Param("categoryId")
+	id := c.QueryParam("categoryId")
 
 	if _, err := uuid.Parse(id); err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
@@ -90,7 +90,7 @@ func (h *Handler) CreateCategory(c echo.Context) error {
 	categoryId, err := h.repository.Insert(&category)
 
 	if err != nil {
-		return errors.UnknownError.WrapErrorCode(4000).WrapDesc(err.Error()).ToResponse(c)
+		return errors.UnknownError.WrapErrorCode(4014).WrapDesc(err.Error()).ToResponse(c)
 	}
 
 	return c.JSON(http.StatusCreated, categoryId)
@@ -104,6 +104,8 @@ func (h *Handler) CreateCategory(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Failure 404 {object} bool
+// @Param categoryId path string true "Category Id"
+// @Param models.CategoryRequest body models.CategoryRequest true "For Update a Categry"
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} bool
@@ -115,17 +117,22 @@ func (h *Handler) UpdateCategory(c echo.Context) error {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	category := models.Category{}
+	categoryReq := models.CategoryRequest{}
 
-	if err := json.NewDecoder(c.Request().Body).Decode(&category); err != nil {
+	if err := json.NewDecoder(c.Request().Body).Decode(&categoryReq); err != nil {
 		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
 	}
+
+	category := models.Category{}
+
 	category.Id = id
 	category.UpdatedAt = lib.TimeStampNow()
-	modifiedCount, err := h.repository.Update(&category)
+	category.Name = categoryReq.Name
 
-	if err != nil {
-		return errors.UnknownError.WrapErrorCode(4000).WrapDesc(err.Error()).ToResponse(c)
+	modifiedCount, error := h.repository.Update(&category)
+
+	if error != nil {
+		return error.ToResponse(c)
 	}
 
 	if *modifiedCount == 0 {
@@ -143,6 +150,7 @@ func (h *Handler) UpdateCategory(c echo.Context) error {
 // @Tags cateroies
 // @Accept json
 // @Produce json
+// @Param categoryId path string true "Category Id"
 // @Failure 404 {object} bool
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
@@ -152,7 +160,7 @@ func (h *Handler) DeleteCategory(c echo.Context) error {
 	id := c.Param("categoryId")
 	_, err := uuid.Parse(id)
 
-	if err == nil {
+	if err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 	}
 
@@ -184,17 +192,16 @@ func (h *Handler) DeleteCategory(c echo.Context) error {
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} models.CategoryResponse
-// @Router /category [get]
+// @Router /categories [get]
 func (h *Handler) GetCategories(c echo.Context) error {
 
 	limitStr := c.QueryParam("limit")
 	offsetStr := c.QueryParam("offset")
 
 	offset, limit := lib.ValidatePaginator(limitStr, offsetStr, h.cfg.MaxPageLimit)
-
 	filter := map[string]interface{}{}
 
-	if name := c.QueryParam("name"); name != "" && len(name) < 10 {
+	if name := c.QueryParam("name"); name != "" {
 		filter["name"] = bson.M{"$regex": primitive.Regex{
 			Pattern: name,
 			Options: "i",

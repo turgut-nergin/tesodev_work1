@@ -70,6 +70,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 // @Tags users
 // @Accept json
 // @Produce json
+// @Param userId query string true "user ID"
 // @Param models.UserRequest body models.UserRequest true "For upsert an User"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error
@@ -138,6 +139,7 @@ func (h *Handler) UpsertUser(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Failure 404 {object} bool
+// @Param userId path string true "User Id"
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} bool
@@ -146,7 +148,7 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("userId")
 	_, err := uuid.Parse(id)
 
-	if err == nil {
+	if err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 	}
 
@@ -205,7 +207,6 @@ func (h *Handler) Validate(c echo.Context) error {
 // @Produce json
 // @Param userName query string false "userName"
 // @Param email query string false "email"
-// @Param password query string false "password"
 // @Param type query string false "type"
 // @Param limit query string false "limit"
 // @Param offset query string false "offset"
@@ -228,13 +229,6 @@ func (h *Handler) GetUsers(c echo.Context) error {
 	if userName := c.QueryParam("userName"); userName != "" {
 		filter["userName"] = bson.M{"$regex": primitive.Regex{
 			Pattern: userName,
-			Options: "i",
-		}}
-	}
-
-	if password := c.QueryParam("password"); password != "" {
-		filter["password"] = bson.M{"$regex": primitive.Regex{
-			Pattern: password,
 			Options: "i",
 		}}
 	}

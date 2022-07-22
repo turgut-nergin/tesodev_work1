@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
@@ -42,15 +43,15 @@ func (r *Repository) GetAnswers(ticketId string) ([]models.Answer, *errors.Error
 func (r *Repository) GetAnswer(answerId string) (*models.Answer, *errors.Error) {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
-	var answer *models.Answer
+	answer := models.Answer{}
 
-	err := r.collection.FindOne(context, bson.M{"_id": answerId}).Decode(&answer)
-
-	if err != nil {
+	if err := r.collection.FindOne(context, bson.M{"_id": answerId}).Decode(&answer); err != nil {
 		return nil, errors.UnknownError.WrapOperation("repository").WrapErrorCode(4060).WrapDesc(err.Error())
 	}
 
-	return answer, nil
+	fmt.Println("............................")
+	fmt.Println(answer)
+	return &answer, nil
 }
 
 func (r *Repository) UpdateAnswer(answer *models.Answer) (*int64, error) {
@@ -59,10 +60,12 @@ func (r *Repository) UpdateAnswer(answer *models.Answer) (*int64, error) {
 	defer cancel()
 	filter := bson.M{"_id": answer.Id}
 
-	result, err := r.collection.UpdateOne(context, filter, answer)
+	result, err := r.collection.UpdateOne(context, filter, bson.M{
+		"$set": answer})
 	if err != nil {
 		return nil, err
 	}
+
 	return &result.ModifiedCount, nil
 }
 

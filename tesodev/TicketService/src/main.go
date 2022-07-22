@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/turgut-nergin/tesodev_work1/client"
 	"github.com/turgut-nergin/tesodev_work1/config"
@@ -26,8 +28,8 @@ func InitRepository(config config.Config) repository.Repositories {
 
 func GetClients() map[string]client.Client {
 	return map[string]client.Client{
-		"userClient":     *client.NewClient("http://localhost:8080"),
-		"categoryClient": *client.NewClient("http://localhost:8082"),
+		"userClient":     *client.NewClient("http://user-service:8080"),
+		"categoryClient": *client.NewClient("http://category-service:8082"),
 	}
 }
 
@@ -43,15 +45,20 @@ func GetClients() map[string]client.Client {
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8081
+// @host ticket-service:8081
 // @schemes http
 
 // @BasePath /
 func main() {
-	config := config.EnvConfig["local"]
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("env load error")
+	}
+	appEnv := os.Getenv("CURRENT_STATE")
+	config := config.EnvConfig[appEnv]
 	repositories := InitRepository(config)
 	clients := GetClients()
 	handler := handler.New(repositories, clients, &config)
+
 	echo := echo.New()
 	routes.GetRouter(echo, handler)
 	log.Fatal(echo.Start(":8081"))

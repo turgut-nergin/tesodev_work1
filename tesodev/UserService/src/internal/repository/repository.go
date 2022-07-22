@@ -78,7 +78,14 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		return nil, errors.FindFailed.WrapErrorCode(4000)
 	}
 
-	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+	if totalCount <= offset*limit {
+		return &models.UserRows{
+			RowCount: totalCount,
+			Users:    nil,
+		}, nil
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(offset * limit) //pagination set
 
 	if sortField != "" && sortDirection == 0 {
 		options = options.SetSort(bson.D{{sortField, sortDirection}})

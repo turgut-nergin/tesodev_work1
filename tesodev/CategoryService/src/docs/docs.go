@@ -25,7 +25,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/category": {
+        "/categories": {
             "get": {
                 "description": "Get Categories by params",
                 "consumes": [
@@ -67,6 +67,49 @@ const docTemplate = `{
                         "type": "string",
                         "description": "direction",
                         "name": "direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/category": {
+            "get": {
+                "description": "Get Category by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cateroies"
+                ],
+                "summary": "Get Category by Id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "categoryId",
+                        "name": "categoryId",
                         "in": "query"
                     }
                 ],
@@ -137,47 +180,6 @@ const docTemplate = `{
             }
         },
         "/category/{categoryId}": {
-            "get": {
-                "description": "Get Category by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cateroies"
-                ],
-                "summary": "Get Category by Id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "categoryId",
-                        "name": "categoryId",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.Error"
-                        }
-                    }
-                }
-            },
             "put": {
                 "description": "Update Category by ID",
                 "consumes": [
@@ -190,6 +192,24 @@ const docTemplate = `{
                     "cateroies"
                 ],
                 "summary": "Update Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Id",
+                        "name": "categoryId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "For Update a Categry",
+                        "name": "models.CategoryRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CategoryRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "400": {
                         "description": "Bad Request",
@@ -223,6 +243,15 @@ const docTemplate = `{
                     "cateroies"
                 ],
                 "summary": "Delete Category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Category Id",
+                        "name": "categoryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "400": {
                         "description": "Bad Request",
@@ -281,7 +310,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8082",
+	Host:             "category-service:8082",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
 	Title:            "CATEGORY SERVICE",

@@ -57,11 +57,15 @@ type Category struct {
 
 type Answer struct {
 	Id        string `bson:"_id,omitempty"`
-	Body      string `bson:"body" json:"body"`
+	Body      string `bson:"body,omitempty"`
 	TicketId  string `bson:"ticketId,omitempty"`
 	UserId    string `bson:"userId,omitempty"`
 	CreatedAt int64  `bson:"createdAt,omitempty"`
 	UpdatedAt int64  `bson:"updatedAt,omitempty"`
+}
+
+type AnswerRequest struct {
+	Body string `json:"body"`
 }
 
 type AnswerResponse struct {

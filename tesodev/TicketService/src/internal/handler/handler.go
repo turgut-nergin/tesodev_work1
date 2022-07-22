@@ -81,15 +81,14 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 
 	}
 
-	category, err := h.clients["category"].GetCategory(categoryId)
-
-	if category == nil {
+	_, err := h.clients["categoryClient"].GetCategory(categoryId)
+	fmt.Println(err)
+	if err != nil {
 		return err.ToResponse(c)
 	}
 
 	if *isExist == false {
 		return errors.UnknownError.WrapErrorCode(3022).WrapDesc("user id not found!").ToResponse(c)
-
 	}
 
 	ticket := lib.RequestAssign(&ticketRequest)
@@ -199,25 +198,28 @@ func (h *Handler) GetTicket(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param answerId path string true "Answer Id"
+// @Param models.AnswerRequest body models.AnswerRequest true "For update a answer"
 // @Failure 404 {object} bool
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
 // @Succes 200 {object} bool
-// @Router /ticket/{answerId} [PUT]
+// @Router /ticket/answer/{answerId} [PUT]
 func (h *Handler) UpdateAnswer(c echo.Context) error {
 	answerId := c.Param("answerId")
 	if _, err := uuid.Parse(answerId); err != nil {
 		return errors.ValidationError.WrapErrorCode(1008).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	answer := models.Answer{}
+	answerRequest := models.AnswerRequest{}
 
-	if err := json.NewDecoder(c.Request().Body).Decode(&answer); err != nil {
+	if err := json.NewDecoder(c.Request().Body).Decode(&answerRequest); err != nil {
 		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
 	}
 
+	answer := models.Answer{}
 	answer.UpdatedAt = lib.TimeStampNow()
 	answer.Id = answerId
+	answer.Body = answerRequest.Body
 	modifiedCount, err := h.AnswerRepository.UpdateAnswer(&answer)
 
 	if err != nil {
@@ -230,12 +232,13 @@ func (h *Handler) UpdateAnswer(c echo.Context) error {
 
 	}
 
+	fmt.Println(answerId)
+
 	answerR, error := h.AnswerRepository.GetAnswer(answerId)
 
 	if error != nil {
 		return error.ToResponse(c)
 	}
-
 	ticket := models.Ticket{}
 	ticket.Id = answerR.TicketId
 	ticket.LastAnsweredAt = lib.TimeStampNow()
@@ -247,6 +250,7 @@ func (h *Handler) UpdateAnswer(c echo.Context) error {
 	}
 
 	if *modifiedCount == 0 {
+		fmt.Println("here")
 		return c.JSON(http.StatusNotFound, false)
 	}
 

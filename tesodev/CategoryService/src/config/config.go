@@ -13,7 +13,7 @@ type Config struct {
 var EnvConfig = map[string]Config{
 
 	"local": {
-		Host:           "localhost",
+		Host:           "mongo-db",
 		Port:           "27017",
 		DBName:         "Category",
 		CollectionName: "Categories",

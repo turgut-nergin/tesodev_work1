@@ -28,6 +28,11 @@ definitions:
       userId:
         type: string
     type: object
+  models.AnswerRequest:
+    properties:
+      body:
+        type: string
+    type: object
   models.Attachment:
     properties:
       fileName:
@@ -48,7 +53,7 @@ definitions:
       subject:
         type: string
     type: object
-host: localhost:8081
+host: ticket-service:8081
 info:
   contact:
     email: support@swagger.io
@@ -100,35 +105,6 @@ paths:
       summary: Create a Ticket by user and category Id
       tags:
       - Tickets
-  /ticket/{answerId}:
-    put:
-      consumes:
-      - application/json
-      description: Update Answer by ID
-      parameters:
-      - description: Answer Id
-        in: path
-        name: answerId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            type: boolean
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Update Answer
-      tags:
-      - Answers
   /ticket/{ticketId}:
     delete:
       consumes:
@@ -223,6 +199,41 @@ paths:
           schema:
             $ref: '#/definitions/errors.Error'
       summary: Create Answer
+      tags:
+      - Answers
+  /ticket/answer/{answerId}:
+    put:
+      consumes:
+      - application/json
+      description: Update Answer by ID
+      parameters:
+      - description: Answer Id
+        in: path
+        name: answerId
+        required: true
+        type: string
+      - description: For update a answer
+        in: body
+        name: models.AnswerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.AnswerRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Update Answer
       tags:
       - Answers
   /tickets:

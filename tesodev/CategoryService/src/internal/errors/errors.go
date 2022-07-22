@@ -20,6 +20,11 @@ func New(applicationName, operation, description string, statusCode, errorCode i
 	}
 }
 
+func (e *Error) WrapOperation(operation string) *Error {
+	e.Operation = operation
+	return e
+}
+
 func (e *Error) ToResponse(ctx echo.Context) error {
 	return ctx.JSON(e.StatusCode, e)
 }

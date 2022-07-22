@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"time"
 
@@ -26,13 +25,13 @@ func New(mongoClient *mongo.Collection) *Repository {
 func (r *Repository) FindOne(id string) (*models.Category, error) {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
-	category := models.Category{}
+	var category *models.Category
 
 	if err := r.collection.FindOne(context, bson.M{"_id": id}).Decode(&category); err != nil {
 		return nil, err
 	}
 
-	return &category, nil
+	return category, nil
 }
 
 func (r *Repository) Delete(id string) (int64, error) {
@@ -52,14 +51,14 @@ func (r *Repository) Insert(category *models.Category) (*string, error) {
 
 }
 
-func (r *Repository) Update(category *models.Category) (*int64, error) {
+func (r *Repository) Update(category *models.Category) (*int64, *errors.Error) {
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	filter := bson.M{"_id": category.Id}
-	result, err := r.collection.UpdateOne(context, filter, category)
+	result, err := r.collection.UpdateOne(context, filter, bson.M{"$set": category})
 	if err != nil {
-		return nil, err
+		return nil, errors.UnknownError.WrapOperation("repository").WrapErrorCode(4000).WrapDesc(err.Error())
 	}
 
 	return &result.ModifiedCount, nil
@@ -78,14 +77,20 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		return nil, errors.FindFailed.WrapErrorCode(4000)
 	}
 
-	options := options.Find().SetLimit(limit).SetSkip(offset) //pagination set
+	if totalCount <= offset*limit {
+		return &models.CategoryRows{
+			RowCount:   totalCount,
+			Categories: nil,
+		}, nil
+	}
+
+	options := options.Find().SetLimit(limit).SetSkip(limit * offset) //pagination set
 
 	if sortField != "" && sortDirection == 0 {
 		options = options.SetSort(bson.D{{sortField, sortDirection}})
 	}
 
 	cur, err := r.collection.Find(context, filter, options)
-	fmt.Println(err)
 
 	if err != nil {
 		return nil, errors.FindFailed.WrapErrorCode(4001)

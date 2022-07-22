@@ -18,7 +18,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8081",
+    "host": "ticket-service:8081",
     "basePath": "/",
     "paths": {
         "/ticket": {
@@ -79,7 +79,7 @@
                 }
             }
         },
-        "/ticket/{answerId}": {
+        "/ticket/answer/{answerId}": {
             "put": {
                 "description": "Update Answer by ID",
                 "consumes": [
@@ -99,6 +99,15 @@
                         "name": "answerId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "For update a answer",
+                        "name": "models.AnswerRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AnswerRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -388,6 +397,14 @@
                     "type": "integer"
                 },
                 "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.AnswerRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
                     "type": "string"
                 }
             }

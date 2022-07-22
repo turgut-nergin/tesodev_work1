@@ -18,7 +18,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "user-service:8080",
     "basePath": "/",
     "paths": {
         "/user": {
@@ -76,6 +76,13 @@
                 ],
                 "summary": "Update and Create User",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user ID",
+                        "name": "userId",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "description": "For upsert an User",
                         "name": "models.UserRequest",
@@ -163,6 +170,15 @@
                     "users"
                 ],
                 "summary": "Delete User",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Id",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "400": {
                         "description": "Bad Request",
@@ -209,12 +225,6 @@
                         "type": "string",
                         "description": "email",
                         "name": "email",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "password",
-                        "name": "password",
                         "in": "query"
                     },
                     {
