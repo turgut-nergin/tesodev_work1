@@ -34,7 +34,10 @@ func (r *Repository) Get(id string) (*models.User, error) {
 }
 
 func (r *Repository) Delete(id string) (int64, error) {
-	result, err := r.db.DeleteOne(context.Background(), bson.M{"_id": id})
+
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	result, err := r.db.DeleteOne(context, bson.M{"_id": id})
 	return result.DeletedCount, err
 }
 
@@ -118,4 +121,18 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		RowCount: totalCount,
 		Users:    userResponse,
 	}, nil
+}
+
+func (r *Repository) FindByUserNameAndPassword(login models.Login) (*models.User, error) {
+
+	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	filter := bson.M{
+		"username": login.UserName,
+		"password": login.Password,
+	}
+	user := models.User{}
+
+	err := r.db.FindOne(context, filter).Decode(&user)
+	return &user, err
 }

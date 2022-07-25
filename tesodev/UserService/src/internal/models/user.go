@@ -35,3 +35,8 @@ type UserRows struct {
 	RowCount int64          `json:"rowCount"`
 	Users    []UserResponse `json:"users"`
 }
+
+type Login struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+}

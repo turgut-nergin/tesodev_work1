@@ -256,3 +256,29 @@ func (h *Handler) GetUsers(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, tickets)
 }
+
+// Login
+// @Summary  Login by username and password
+// @Description Login by username and password
+// @Tags Login
+// @Accept json
+// @Produce json
+// @Param models.UserRequest body models.Login true "To Login"
+// @Failure 404 {object} errors.Error
+// @Succes 200 {object} models.User
+// @Router /login [post]
+func (h *Handler) Login(c echo.Context) error {
+
+	login := models.Login{}
+
+	if err := json.NewDecoder(c.Request().Body).Decode(&login); err != nil {
+		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
+	}
+	result, err := h.repository.FindByUserNameAndPassword(login)
+
+	if err != nil {
+		return c.JSON(http.StatusNotFound, err)
+	}
+	return c.JSON(http.StatusOK, result)
+
+}

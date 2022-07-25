@@ -13,6 +13,13 @@ definitions:
       statusCode:
         type: integer
     type: object
+  models.Login:
+    properties:
+      password:
+        type: string
+      userName:
+        type: string
+    type: object
   models.UserRequest:
     properties:
       email:
@@ -38,6 +45,28 @@ info:
   title: USER SERVICE
   version: "1.0"
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login by username and password
+      parameters:
+      - description: To Login
+        in: body
+        name: models.UserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      produces:
+      - application/json
+      responses:
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Login by username and password
+      tags:
+      - Login
   /user:
     get:
       consumes:
