@@ -53,7 +53,7 @@ definitions:
       subject:
         type: string
     type: object
-host: ticket-service:8081
+host: localhost:8081
 info:
   contact:
     email: support@swagger.io
@@ -86,6 +86,11 @@ paths:
       - description: User ID
         in: query
         name: userId
+        type: string
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
         type: string
       produces:
       - application/json
@@ -142,6 +147,11 @@ paths:
       - description: Ticket Id
         in: path
         name: ticketId
+        required: true
+        type: string
+      - description: Bearer
+        in: header
+        name: Token
         required: true
         type: string
       produces:

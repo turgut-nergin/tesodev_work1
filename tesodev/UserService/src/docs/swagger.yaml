@@ -13,7 +13,7 @@ definitions:
       statusCode:
         type: integer
     type: object
-  models.Login:
+  models.Authentication:
     properties:
       password:
         type: string
@@ -45,6 +45,27 @@ info:
   title: USER SERVICE
   version: "1.0"
 paths:
+  /isAuthorized:
+    get:
+      consumes:
+      - application/json
+      description: isAuthorized by token
+      parameters:
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: isAuthorized by token
+      tags:
+      - isAuthorized
   /login:
     post:
       consumes:
@@ -56,7 +77,7 @@ paths:
         name: models.UserRequest
         required: true
         schema:
-          $ref: '#/definitions/models.Login'
+          $ref: '#/definitions/models.Authentication'
       produces:
       - application/json
       responses:

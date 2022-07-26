@@ -18,7 +18,7 @@
         },
         "version": "1.0"
     },
-    "host": "ticket-service:8081",
+    "host": "localhost:8081",
     "basePath": "/",
     "paths": {
         "/ticket": {
@@ -55,6 +55,13 @@
                         "description": "User ID",
                         "name": "userId",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -151,6 +158,13 @@
                         "description": "Ticket Id",
                         "name": "ticketId",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer",
+                        "name": "Token",
+                        "in": "header",
                         "required": true
                     }
                 ],

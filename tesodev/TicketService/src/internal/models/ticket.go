@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 )
 
 type TicketResponse struct {
@@ -75,4 +77,9 @@ type AnswerResponse struct {
 	TicketId  string    `json:"ticketId"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+type CountOrError struct {
+	TotalCount int64
+	Error      *errors.Error
 }

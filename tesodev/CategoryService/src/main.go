@@ -11,6 +11,7 @@ import (
 
 	"github.com/turgut-nergin/tesodev_work1/config"
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
+	"github.com/turgut-nergin/tesodev_work1/internal/middlewares"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
 	"github.com/turgut-nergin/tesodev_work1/internal/routes"
@@ -43,8 +44,15 @@ func main() {
 	repo := repository.New(collection)
 	handler := handler.New(repo, &config)
 	echo := echo.New()
-	routes.GetRouter(echo, handler)
 	echo.Use(middleware.CORS())
+	admin := echo.Group("admin")
+	user := echo.Group("user")
+	admin.Use(middlewares.IsAuthorized("admin"))
+	user.Use(middlewares.IsAuthorized("user"))
+	routes.SetAdminRouter(admin, handler)
+	routes.SetUserRouter(user, handler)
+	routes.SetGeneric(echo, handler)
+
 	log.Fatal(echo.Start(":8082"))
 
 }

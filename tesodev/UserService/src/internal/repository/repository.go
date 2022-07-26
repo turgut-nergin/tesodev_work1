@@ -74,20 +74,20 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	totalCount, err := r.db.CountDocuments(context, filter)
+	countChan := make(chan models.CountOrError)
 
-	if err != nil {
+	go func() {
+		totalCount, err := r.db.CountDocuments(context, filter)
+		countOrError := models.CountOrError{
+			TotalCount: totalCount,
+			Error:      nil,
+		}
+		if err != nil {
+			countOrError.Error = errors.FindFailed.WrapErrorCode(4000)
+		}
 
-		return nil, errors.FindFailed.WrapErrorCode(4000)
-	}
-
-	if totalCount <= offset*limit {
-		return &models.UserRows{
-			RowCount: totalCount,
-			Users:    nil,
-		}, nil
-	}
-
+		countChan <- countOrError
+	}()
 	options := options.Find()
 
 	if sortField != "" && sortDirection == 0 {
@@ -117,22 +117,28 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		userResponse = append(userResponse, *ticketResponse)
 	}
 
+	countOrError := <-countChan
+
+	if countOrError.Error != nil {
+		return nil, countOrError.Error
+	}
+
 	return &models.UserRows{
-		RowCount: totalCount,
+		RowCount: countOrError.TotalCount,
 		Users:    userResponse,
 	}, nil
 }
 
-func (r *Repository) FindByUserNameAndPassword(login models.Login) (*models.User, error) {
+func (r *Repository) FindByUserNameAndPassword(userName string) (*models.User, error) {
 
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	filter := bson.M{
-		"username": login.UserName,
-		"password": login.Password,
+		"userName": userName,
 	}
 	user := models.User{}
 
 	err := r.db.FindOne(context, filter).Decode(&user)
+
 	return &user, err
 }

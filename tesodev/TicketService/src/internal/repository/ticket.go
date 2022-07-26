@@ -75,19 +75,21 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	totalCount, err := r.collection.CountDocuments(context, filter)
+	countChan := make(chan models.CountOrError)
 
-	if err != nil {
+	go func() {
+		totalCount, err := r.collection.CountDocuments(context, filter)
+		countOrError := models.CountOrError{
+			TotalCount: totalCount,
+			Error:      nil,
+		}
+		if err != nil {
+			countOrError.Error = errors.FindFailed.WrapErrorCode(4000)
+		}
 
-		return nil, errors.FindFailed.WrapErrorCode(4000)
-	}
+		countChan <- countOrError
+	}()
 
-	if totalCount <= offset*limit {
-		return &models.TicketRows{
-			RowCount: totalCount,
-			Tickets:  nil,
-		}, nil
-	}
 	options := options.Find()
 
 	if sortField != "" && sortDirection == 0 {
@@ -117,8 +119,14 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 		ticketsResponse = append(ticketsResponse, *ticketResponse)
 	}
 
+	countOrError := <-countChan
+
+	if countOrError.Error != nil {
+		return nil, countOrError.Error
+	}
+
 	return &models.TicketRows{
-		RowCount: totalCount,
+		RowCount: countOrError.TotalCount,
 		Tickets:  ticketsResponse,
 	}, nil
 }

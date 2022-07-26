@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/turgut-nergin/tesodev_work1/config"
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
@@ -263,22 +264,88 @@ func (h *Handler) GetUsers(c echo.Context) error {
 // @Tags Login
 // @Accept json
 // @Produce json
-// @Param models.UserRequest body models.Login true "To Login"
+// @Param models.UserRequest body models.Authentication true "To Login"
 // @Failure 404 {object} errors.Error
 // @Succes 200 {object} models.User
 // @Router /login [post]
 func (h *Handler) Login(c echo.Context) error {
 
-	login := models.Login{}
+	login := models.Authentication{}
 
 	if err := json.NewDecoder(c.Request().Body).Decode(&login); err != nil {
 		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
 	}
-	result, err := h.repository.FindByUserNameAndPassword(login)
+
+	result, err := h.repository.FindByUserNameAndPassword(login.UserName)
 
 	if err != nil {
-		return c.JSON(http.StatusNotFound, err)
+		return c.JSON(http.StatusNotFound, result)
 	}
-	return c.JSON(http.StatusOK, result)
+
+	Check := lib.DoPasswordsMatch(result.Password, login.Password)
+
+	if !Check {
+		return c.JSON(http.StatusBadRequest, "warning")
+	}
+	validToken, err := lib.GenerateJWT(result.UserName, result.Type)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, "Failed to generate token")
+
+	}
+	fmt.Println(validToken)
+	var token models.Token
+	token.UserName = result.UserName
+	token.Role = result.Type
+	token.TokenString = validToken
+	c.Response().Header().Set("Content-Type", "application/json")
+	return c.JSON(http.StatusOK, token)
+
+}
+
+// isAuthorized
+// @Summary  isAuthorized by token
+// @Description isAuthorized by token
+// @Tags isAuthorized
+// @Accept json
+// @Produce json
+// @Failure 404 {object} errors.Error
+// @Succes 200 {object} models.User
+// @Param Token header string true "Bearer"
+// @Router /isAuthorized [get]
+func (h *Handler) IsAuthorized(c echo.Context) error {
+
+	tokenString := c.Request().Header["Token"]
+	if tokenString == nil {
+		return errors.NotFound.WrapErrorCode(1008).WrapDesc("No Token Found").ToResponse(c)
+	}
+
+	var apiKey = []byte("tesodev")
+
+	token, err := jwt.Parse(tokenString[0], func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("There was an error in parsing")
+		}
+		return apiKey, nil
+
+	})
+
+	if err != nil {
+		return errors.ValidationError.WrapErrorCode(5001).WrapDesc("Your Token has been expired").ToResponse(c)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+
+		if claims["role"] == "admin" {
+
+			c.Response().Header().Set("role", "admin")
+			return c.JSON(http.StatusOK, "admin")
+
+		} else if claims["role"] == "user" {
+			c.Response().Header().Set("role", "user")
+			return c.JSON(http.StatusOK, "user")
+
+		}
+	}
+	return c.JSON(http.StatusUnauthorized, "unAuthorized")
 
 }

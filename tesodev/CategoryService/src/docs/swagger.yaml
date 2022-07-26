@@ -18,7 +18,7 @@ definitions:
       name:
         type: string
     type: object
-host: category-service:8082
+host: localhost:8082
 info:
   contact:
     email: support@swagger.io
@@ -32,7 +32,97 @@ info:
   title: CATEGORY SERVICE
   version: "1.0"
 paths:
-  /categories:
+  /admin/category:
+    post:
+      consumes:
+      - application/json
+      description: Create Category
+      parameters:
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: For Create a Categry
+        in: body
+        name: models.CategoryRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.CategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Create Category
+      tags:
+      - cateroies
+  /admin/category/{categoryId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Category by ID
+      parameters:
+      - description: Category Id
+        in: path
+        name: categoryId
+        required: true
+        type: string
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "404":
+          description: Not Found
+          schema:
+            type: boolean
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Delete Category
+      tags:
+      - cateroies
+  /csv:
+    post:
+      consumes:
+      - application/json
+      description: Read csv file
+      parameters:
+      - description: this is a test file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Read csv file
+      tags:
+      - CSV
+  /user/categories:
     get:
       consumes:
       - application/json
@@ -58,6 +148,11 @@ paths:
         in: query
         name: direction
         type: string
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -76,12 +171,17 @@ paths:
       summary: Get Categories by params
       tags:
       - cateroies
-  /category:
+  /user/category:
     get:
       consumes:
       - application/json
       description: Get Category by ID
       parameters:
+      - description: Bearer
+        in: header
+        name: Token
+        required: true
+        type: string
       - description: categoryId
         in: query
         name: categoryId
@@ -104,64 +204,7 @@ paths:
       summary: Get Category by Id
       tags:
       - cateroies
-    post:
-      consumes:
-      - application/json
-      description: Create Category
-      parameters:
-      - description: For Create a Categry
-        in: body
-        name: models.CategoryRequest
-        required: true
-        schema:
-          $ref: '#/definitions/models.CategoryRequest'
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            type: boolean
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Create Category
-      tags:
-      - cateroies
-  /category/{categoryId}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete Category by ID
-      parameters:
-      - description: Category Id
-        in: path
-        name: categoryId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.Error'
-        "404":
-          description: Not Found
-          schema:
-            type: boolean
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.Error'
-      summary: Delete Category
-      tags:
-      - cateroies
+  /user/category/{categoryId}:
     put:
       consumes:
       - application/json
@@ -170,6 +213,11 @@ paths:
       - description: Category Id
         in: path
         name: categoryId
+        required: true
+        type: string
+      - description: Bearer
+        in: header
+        name: Token
         required: true
         type: string
       - description: For Update a Categry

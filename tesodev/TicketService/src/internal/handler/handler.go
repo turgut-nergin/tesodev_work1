@@ -41,6 +41,7 @@ func New(repositories repository.Repositories, client map[string]client.Client, 
 // @Param models.TicketRequest body models.TicketRequest true "For Create a Ticket"
 // @Param categoryId query string false "Category ID"
 // @Param userId query string false "User ID"
+// @Param Token header string true "Bearer"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
@@ -49,6 +50,7 @@ func New(repositories repository.Repositories, client map[string]client.Client, 
 func (h *Handler) CreateTicket(c echo.Context) error {
 	userId := c.QueryParam("userId")
 	categoryId := c.QueryParam("categoryId")
+	token := c.Request().Header["Token"]
 
 	if userId == "" {
 		return errors.ValidationError.WrapErrorCode(3000).WrapDesc("user id cannot be empty").ToResponse(c)
@@ -81,7 +83,7 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 
 	}
 
-	_, err := h.clients["categoryClient"].GetCategory(categoryId)
+	_, err := h.clients["categoryClient"].GetCategory(categoryId, token)
 	fmt.Println(err)
 	if err != nil {
 		return err.ToResponse(c)
@@ -145,6 +147,7 @@ func (h *Handler) DeleteTicket(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param ticketId path string true "Ticket Id"
+// @Param Token header string true "Bearer"
 // @Failure 404 {object} errors.Error
 // @Failure 400 {object} errors.Error
 // @Failure 500 {object} errors.Error
@@ -152,6 +155,7 @@ func (h *Handler) DeleteTicket(c echo.Context) error {
 // @Router /ticket/{ticketId} [GET]
 func (h *Handler) GetTicket(c echo.Context) error {
 	ticketId := c.Param("ticketId")
+	token := c.Request().Header["Token"]
 
 	fmt.Println(ticketId)
 	if _, err := uuid.Parse(ticketId); err != nil {
@@ -169,7 +173,7 @@ func (h *Handler) GetTicket(c echo.Context) error {
 			WrapDesc(fmt.Sprintf("Ticket id: %v not found", ticketId)).ToResponse(c)
 	}
 
-	category, error := h.clients["categoryClient"].GetCategory(tickets.CategoryId)
+	category, error := h.clients["categoryClient"].GetCategory(tickets.CategoryId, token)
 
 	if error != nil {
 		return error.ToResponse(c)
