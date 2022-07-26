@@ -8,12 +8,16 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func (c Client) GetCategory(id string) (*models.Category, *errors.Error) {
+func (c Client) GetCategory(id string, token []string) (*models.Category, *errors.Error) {
 	params := map[string]string{
 		"categoryId": id,
 	}
 
-	response, err := c.do(fasthttp.MethodGet, "category", params)
+	headers := map[string]string{
+		"Token": token[0],
+	}
+
+	response, err := c.do(fasthttp.MethodGet, "user/category", params, headers)
 	defer fasthttp.ReleaseResponse(response)
 	if err != nil {
 		error := errors.UnknownError.WrapErrorCode(3035).WrapDesc(err.Error())

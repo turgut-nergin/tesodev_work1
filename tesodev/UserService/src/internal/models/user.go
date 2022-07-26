@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 )
 
 type UserResponse struct {
@@ -34,4 +36,20 @@ type UserRequest struct {
 type UserRows struct {
 	RowCount int64          `json:"rowCount"`
 	Users    []UserResponse `json:"users"`
+}
+
+type Authentication struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+}
+
+type Token struct {
+	Role        string `json:"role"`
+	UserName    string `json:"userName"`
+	TokenString string `json:"token"`
+}
+
+type CountOrError struct {
+	TotalCount int64
+	Error      *errors.Error
 }

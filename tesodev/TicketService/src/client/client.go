@@ -38,7 +38,7 @@ func NewClient(host string) *Client {
 	}
 }
 
-func (c *Client) do(method, endpoint string, params map[string]string) (*fasthttp.Response, error) {
+func (c *Client) do(method string, endpoint string, params map[string]string, headers map[string]string) (*fasthttp.Response, error) {
 	baseURL := fmt.Sprintf("%s/%s", c.Host, endpoint)
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
@@ -50,8 +50,11 @@ func (c *Client) do(method, endpoint string, params map[string]string) (*fasthtt
 	for key, val := range params {
 		q.Set(key, val)
 	}
+
+	for key, val := range headers {
+		req.Header.Add(key, val)
+	}
 	resp := fasthttp.AcquireResponse()
-	// defer fasthttp.ReleaseResponse(resp)
 
 	err := c.Client.Do(req, resp)
 
@@ -63,15 +66,4 @@ func (c *Client) do(method, endpoint string, params map[string]string) (*fasthtt
 
 	return resp, nil
 
-	// req, err := http.NewRequest(method, baseURL, nil)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// req.Header.Add("Content-Type", "application/json")
-	// q := req.URL.Query()
-	// for key, val := range params {
-	// 	q.Set(key, val)
-	// }
-	// req.URL.RawQuery = q.Encode()
-	// return c.Client.Do(req)
 }

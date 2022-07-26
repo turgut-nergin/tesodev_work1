@@ -14,7 +14,7 @@ func (c Client) UserIsExist(id string) (*bool, *errors.Error) {
 		"userId": id,
 	}
 
-	response, err := c.do(fasthttp.MethodGet, "user", params)
+	response, err := c.do(fasthttp.MethodGet, "user", params, nil)
 	if err != nil {
 		error := errors.UnknownError.WrapErrorCode(3024).WrapDesc(err.Error())
 		return nil, error

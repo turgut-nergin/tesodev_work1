@@ -59,6 +59,13 @@ const docTemplate = `{
                         "description": "User ID",
                         "name": "userId",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -155,6 +162,13 @@ const docTemplate = `{
                         "description": "Ticket Id",
                         "name": "ticketId",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Bearer",
+                        "name": "Token",
+                        "in": "header",
                         "required": true
                     }
                 ],

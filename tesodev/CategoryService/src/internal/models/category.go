@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 )
 
 type CategoryResponse struct {
@@ -25,4 +27,9 @@ type Category struct {
 
 type CategoryRequest struct {
 	Name string `json:"name"`
+}
+
+type CountOrError struct {
+	TotalCount int64
+	Error      *errors.Error
 }
