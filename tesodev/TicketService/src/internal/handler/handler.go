@@ -21,10 +21,10 @@ import (
 type Handler struct {
 	repository.Repositories
 	clients map[string]client.Client
-	cfg     *config.Config
+	cfg     *config.MongoConfig
 }
 
-func New(repositories repository.Repositories, client map[string]client.Client, config *config.Config) *Handler {
+func New(repositories repository.Repositories, client map[string]client.Client, config *config.MongoConfig) *Handler {
 	return &Handler{
 		Repositories: repositories,
 		clients:      client,
@@ -84,7 +84,7 @@ func (h *Handler) CreateTicket(c echo.Context) error {
 	}
 
 	_, err := h.clients["categoryClient"].GetCategory(categoryId, token)
-	fmt.Println(err)
+
 	if err != nil {
 		return err.ToResponse(c)
 	}
@@ -157,7 +157,6 @@ func (h *Handler) GetTicket(c echo.Context) error {
 	ticketId := c.Param("ticketId")
 	token := c.Request().Header["Token"]
 
-	fmt.Println(ticketId)
 	if _, err := uuid.Parse(ticketId); err != nil {
 		return errors.ValidationError.WrapErrorCode(3009).WrapDesc(err.Error()).ToResponse(c)
 	}

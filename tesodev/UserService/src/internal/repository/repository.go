@@ -129,7 +129,7 @@ func (r *Repository) Find(limit, offset int64, filter map[string]interface{}, so
 	}, nil
 }
 
-func (r *Repository) FindByUserNameAndPassword(userName string) (*models.User, error) {
+func (r *Repository) FindByUserName(userName string) (*models.User, error) {
 
 	context, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()

@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/turgut-nergin/tesodev_work1/config"
+	"github.com/turgut-nergin/tesodev_work1/internal/broker"
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
 	"github.com/turgut-nergin/tesodev_work1/internal/lib"
 	"github.com/turgut-nergin/tesodev_work1/internal/models"
@@ -20,12 +21,15 @@ import (
 
 type Handler struct {
 	repository *repository.Repository
-	cfg        *config.Config
+	cfg        *config.MongoConfig
+	rabbitmq   *models.RabbitMQ
 }
 
-func New(repository *repository.Repository, config *config.Config) *Handler {
-	return &Handler{repository: repository,
-		cfg: config,
+func New(repository *repository.Repository, config *config.MongoConfig, rabbitMQModel models.RabbitMQ) *Handler {
+	return &Handler{
+		repository: repository,
+		cfg:        config,
+		rabbitmq:   &rabbitMQModel,
 	}
 }
 
@@ -163,6 +167,9 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, false)
 	}
 
+	h.rabbitmq.Message = id
+	broker.PublishConsumer(h.rabbitmq)
+
 	return c.JSON(http.StatusOK, true)
 }
 
@@ -276,7 +283,7 @@ func (h *Handler) Login(c echo.Context) error {
 		return errors.ValidationError.WrapErrorCode(1009).WrapDesc(err.Error()).ToResponse(c)
 	}
 
-	result, err := h.repository.FindByUserNameAndPassword(login.UserName)
+	result, err := h.repository.FindByUserName(login.UserName)
 
 	if err != nil {
 		return c.JSON(http.StatusNotFound, result)
@@ -285,19 +292,18 @@ func (h *Handler) Login(c echo.Context) error {
 	Check := lib.DoPasswordsMatch(result.Password, login.Password)
 
 	if !Check {
-		return c.JSON(http.StatusBadRequest, "warning")
+		return c.JSON(http.StatusUnauthorized, "Authentication error")
 	}
+
 	validToken, err := lib.GenerateJWT(result.UserName, result.Type)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, "Failed to generate token")
 
 	}
-	fmt.Println(validToken)
 	var token models.Token
 	token.UserName = result.UserName
 	token.Role = result.Type
 	token.TokenString = validToken
-	c.Response().Header().Set("Content-Type", "application/json")
 	return c.JSON(http.StatusOK, token)
 
 }

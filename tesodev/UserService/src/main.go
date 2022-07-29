@@ -10,7 +10,9 @@ import (
 	_ "github.com/turgut-nergin/tesodev_work1/docs"
 
 	"github.com/turgut-nergin/tesodev_work1/config"
+	"github.com/turgut-nergin/tesodev_work1/internal/broker"
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
+	"github.com/turgut-nergin/tesodev_work1/internal/models"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
 	"github.com/turgut-nergin/tesodev_work1/internal/routes"
@@ -34,14 +36,28 @@ import (
 // @BasePath /
 
 func main() {
-	appEnv := os.Getenv("CURRENT_STATE")
+	mongoConfig := config.MongoEnvConfig[os.Getenv("CURRENT_STATE")]
 
-	config := config.EnvConfig[appEnv]
-	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
+	config := config.RabbitMQEnvConfig["local"]
+	fmt.Println(config)
+	conn := broker.CreateConnection(config)
+	defer conn.Close()
+
+	ch := broker.CreateChannel(conn)
+	defer ch.Close()
+
+	q := broker.CreateQueue(ch)
+
+	rabbitMQModel := models.RabbitMQ{
+		Channel: ch,
+		Queue:   q,
+	}
+
+	url := fmt.Sprintf("mongodb://%s:%s", mongoConfig.Host, mongoConfig.Port)
 	client := mongo.MongoClient(url)
-	collection := client.Database(config.DBName).Collection(config.CollectionName)
+	collection := client.Database(mongoConfig.DBName).Collection(mongoConfig.CollectionName)
 	repo := repository.New(collection)
-	handler := handler.New(repo, &config)
+	handler := handler.New(repo, &mongoConfig, rabbitMQModel)
 	echo := echo.New()
 
 	echo.Use(middleware.CORS())

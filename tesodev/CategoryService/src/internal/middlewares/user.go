@@ -30,9 +30,8 @@ func IsAuthorized(role string) echo.MiddlewareFunc {
 			if err != nil {
 				return errors.ValidationError.WrapOperation("middleware").WrapErrorCode(5001).WrapDesc("Your Token has been expired").ToResponse(c)
 			}
-			fmt.Println(tokenString)
+
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-				fmt.Println(claims["role"])
 				if claims["role"] == role || claims["role"] == "admin" {
 					c.Response().Header().Set("role", role)
 					return next(c)

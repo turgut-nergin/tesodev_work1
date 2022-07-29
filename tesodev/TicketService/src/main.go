@@ -9,13 +9,14 @@ import (
 	"github.com/turgut-nergin/tesodev_work1/client"
 	"github.com/turgut-nergin/tesodev_work1/config"
 	_ "github.com/turgut-nergin/tesodev_work1/docs"
+	"github.com/turgut-nergin/tesodev_work1/internal/broker"
 	"github.com/turgut-nergin/tesodev_work1/internal/handler"
 	"github.com/turgut-nergin/tesodev_work1/internal/mongo"
 	"github.com/turgut-nergin/tesodev_work1/internal/repository"
 	"github.com/turgut-nergin/tesodev_work1/internal/routes"
 )
 
-func InitRepository(config config.Config) repository.Repositories {
+func InitRepository(config config.MongoConfig) repository.Repositories {
 	url := fmt.Sprintf("mongodb://%s:%s", config.Host, config.Port)
 	client := mongo.MongoClient(url)
 	db := client.Database(config.DBName)
@@ -50,10 +51,22 @@ func GetClients() map[string]client.Client {
 // @BasePath /
 func main() {
 	appEnv := os.Getenv("CURRENT_STATE")
-	config := config.EnvConfig[appEnv]
-	repositories := InitRepository(config)
+	mongoConfig := config.MongoEnvConfig[appEnv]
+	rabbitConfig := config.RabbitMQEnvConfig["local"]
+	conn := broker.CreateConnection(rabbitConfig)
+	defer conn.Close()
+
+	ch := broker.CreateChannel(conn)
+	defer ch.Close()
+
+	q := broker.CreateQueue(ch)
+	msgs := broker.RegisterConsumer(ch, q)
+
+	repositories := InitRepository(mongoConfig)
 	clients := GetClients()
-	handler := handler.New(repositories, clients, &config)
+	handler := handler.New(repositories, clients, &mongoConfig)
+
+	broker.HandleDelivery(msgs, repositories)
 
 	echo := echo.New()
 	routes.GetRouter(echo, handler)

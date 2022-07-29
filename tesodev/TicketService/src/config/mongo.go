@@ -1,6 +1,6 @@
 package config
 
-type Config struct {
+type MongoConfig struct {
 	Host             string
 	Port             string
 	DBName           string
@@ -11,7 +11,7 @@ type Config struct {
 	MaxPageLimit     int64
 }
 
-var EnvConfig = map[string]Config{
+var MongoEnvConfig = map[string]MongoConfig{
 
 	"local": {
 		Host:             "mongo-db",

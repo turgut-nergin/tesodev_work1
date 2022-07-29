@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/turgut-nergin/tesodev_work1/internal/errors"
@@ -16,6 +17,7 @@ type TicketRepository interface {
 	InsertTicket(ticket *models.Ticket) (*string, *errors.Error)
 	DeleteTicket(id string) (int64, error)
 	GetTicket(id string) (*models.Ticket, error)
+	UpdateTicket(id string)
 	Update(ticket models.Ticket) (*int64, *errors.Error)
 	Find(limit int64, offset int64, filter map[string]interface{}, sortField string, sortDirection int) (*models.TicketRows, *errors.Error)
 }
@@ -45,6 +47,24 @@ func (r *Repository) GetTicket(id string) (*models.Ticket, error) {
 		return nil, err
 	}
 	return &ticket, nil
+}
+
+func (r *Repository) UpdateTicket(id string) {
+	context, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	filter := bson.M{"createdBy": id}
+
+	result, err := r.collection.UpdateOne(context, filter, bson.M{
+		"$set": bson.M{"deteleted": true}})
+
+	if err != nil {
+		log.Printf(err.Error())
+
+	}
+	if result.ModifiedCount == 0 {
+		log.Printf("Ticket id is not modified!")
+	}
+
 }
 
 func (r *Repository) DeleteTicket(id string) (int64, error) {
